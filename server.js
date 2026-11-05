@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const PORT = process.env.PORT || 3000;
-const PUBLIC = __dirnazme ;
+const PUBLIC = __dirname ;
 const players = new Map(), classFirst = {};
 const bosses = {warden:1000, witch:1250};
 const deadEnemies = new Set();
