@@ -126,6 +126,32 @@
 <div id="bestiaryModal" class="modal"><div class="card"><h2>Yaratık Rehberi</h2><p>Yalnızca 1–10. seviye yaratıkların bilgileri gösterilir. 11. seviye ve üzerindeki yaratıkların bilgileri gizlidir.</p><div id="bestiaryContent"></div><button id="bestiaryClose">Kapat</button></div></div>
 <div id="skillModal" class="modal"><div class="card"><h2>Beceri Kitabı</h2><p>Öğrendiğin beceriler. Bir beceriye tıklayarak etkin çubuğa yerleştirebilirsin.</p><div id="skillList" class="choicegrid"></div><button id="skillClose">Kapat</button></div></div>
 <div id="lootModal" class="modal"><div class="card"><h2>Ganimet Sandığı</h2><p>Canavardan düşen ganimetleri topladın.</p><div id="lootContents"></div><button id="lootClose">Ganimetleri topla</button></div></div>
+ <div id="inventoryModal" class="modal">
+  <div class="card">
+    <h2>Karakter Çantası</h2>
+    <div id="inventoryContents">Çanta yükleniyor...</div>
+    <button id="closeInventory" type="button">Kapat</button>
+  </div>
+</div>
+
+<div id="statsModal" class="modal">
+  <div class="card">
+    <h2>Karakter Statüleri</h2>
+    <p>Kullanılabilir puan: <span id="statPoints">0</span></p>
+    <div id="statContents"></div>
+    <button id="closeStats" type="button">Kapat</button>
+  </div>
+</div>
+<div id="helpModal" class="modal">
+  <div class="card">
+    <h2>Yardımcı Rehber</h2>
+    <p>I: Çanta</p>
+    <p>U: Statü ekranı</p>
+    <p>F1: Yardımcı rehber</p>
+    <p>Seviye atladığında 5 statü puanı kazanırsın.</p>
+    <button id="closeHelp" type="button">Kapat</button>
+  </div>
+</div>
 <script src="./config.js"></script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -136,7 +162,6 @@ Math.random = () => {
  worldRngState = (worldRngState * 1664525 + 1013904223) >>> 0;
  return worldRngState / 4294967296;
 };
-
 const canvas = document.querySelector('#game');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -261,6 +286,47 @@ document.addEventListener('pointerlockchange',()=>mouseLocked=document.pointerLo
 document.addEventListener('mousemove',e=>{if(mouseLocked){yaw-=e.movementX*.0025;pitch=Math.max(-.15,Math.min(.75,pitch+e.movementY*.0018));}});
 document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(e.code==='KeyE')collectNearby();});
 document.addEventListener('keyup',e=>keys[e.code]=false);
+ function toggleGameModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  const isOpen = modal.style.display === 'flex';
+
+  document.querySelectorAll(
+    '#inventoryModal, #statsModal, #helpModal'
+  ).forEach(m => m.style.display = 'none');
+
+  if (!isOpen) modal.style.display = 'flex';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  if (e.target.closest('input, textarea, select')) return;
+
+  if (e.code === 'KeyI') {
+    e.preventDefault();
+    toggleGameModal('inventoryModal');
+  }
+
+  if (e.code === 'KeyU') {
+    e.preventDefault();
+    toggleGameModal('statsModal');
+  }
+
+  if (e.code === 'F1') {
+    e.preventDefault();
+    toggleGameModal('helpModal');
+  }
+});
+
+document.getElementById('closeInventory').onclick = () =>
+  document.getElementById('inventoryModal').style.display = 'none';
+
+document.getElementById('closeStats').onclick = () =>
+  document.getElementById('statsModal').style.display = 'none';
+
+document.getElementById('closeHelp').onclick = () =>
+  document.getElementById('helpModal').style.display = 'none';
 canvas.addEventListener('click',()=>{if(joined&&!mouseLocked)canvas.requestPointerLock?.();});
 function collectNearby(){
  let nearest=null,d=3.2;
