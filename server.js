@@ -5,7 +5,17 @@ const WebSocket = require('ws');
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, 'public');
 const players = new Map(), classFirst = {};
-const bosses = {warden:1000, witch:1250};
+const bossMaxHP = {warden:1000, witch:1250};
+const bosses = {...bossMaxHP};
+function randomBossPoint(other=null){
+ let p,tries=0;
+ do{const a=Math.random()*Math.PI*2,r=48+Math.random()*38;p={x:Math.round(Math.cos(a)*r),z:Math.round(Math.sin(a)*r)};tries++;}
+ while(tries<50&&other&&Math.hypot(p.x-other.x,p.z-other.z)<52);
+ return p;
+}
+const bossPositions={warden:randomBossPoint(),witch:null};
+bossPositions.witch=randomBossPoint(bossPositions.warden);
+const bossRespawnTimers=new Map();
 const deadEnemies = new Set();
 const lootChests = new Map();
 const respawnTimers = new Map();
@@ -24,22 +34,31 @@ function publishState(){broadcast({type:'state',players:[...players.values()]});
 wss.on('connection',socket=>{
  const id=Math.random().toString(36).slice(2,10);
  const player={id,name:'Gezgin',x:0,y:0,z:0,rotation:0,color:colors[Math.floor(Math.random()*colors.length)],className:''};
- players.set(id,player);send(socket,{type:'welcome',id,bosses,classFirst,deadEnemies:[...deadEnemies],chests:[...lootChests.values()]});
+ players.set(id,player);send(socket,{type:'welcome',id,bosses,bossPositions,classFirst,deadEnemies:[...deadEnemies],chests:[...lootChests.values()]});
  socket.lastMessageAt=0;
  socket.on('message',raw=>{
   const now=Date.now();if(now-socket.lastMessageAt<12)return;socket.lastMessageAt=now;
   let msg;try{msg=JSON.parse(raw.toString());}catch{return;}
   if(msg.type==='join'&&typeof msg.name==='string')player.name=msg.name.slice(0,18);
   if(msg.type==='move')for(const k of ['x','y','z','rotation'])if(Number.isFinite(msg[k]))player[k]=Math.max(-120,Math.min(120,msg[k]));
-  if(msg.type==='chooseClass'&&['Savaşçı','Rahip','Okçu','Suikastçi','Tank'].includes(msg.className)){
+  if(msg.type==='chooseClass'&&['Büyücü','Rahip','Okçu','Suikastçi','Tank'].includes(msg.className)){
    player.className=msg.className;if(!classFirst[msg.className])classFirst[msg.className]=id;
    broadcast({type:'classFirst',classes:classFirst});
   }
-  if(msg.type==='bossAttack'&&(msg.boss==='warden'||msg.boss==='witch')&&Number.isFinite(msg.damage)){
+  if(msg.type==='bossAttack'&&(msg.boss==='warden'||msg.boss==='witch')&&Number.isFinite(msg.damage)&&bosses[msg.boss]>0){
    bosses[msg.boss]=Math.max(0,bosses[msg.boss]-Math.min(80,Math.max(1,msg.damage)));
    broadcast({type:'bossUpdate',boss:msg.boss,bosses});
   }
-  if(msg.type==='bossDefeated'&&(msg.boss==='warden'||msg.boss==='witch')){bosses[msg.boss]=0;broadcast({type:'bossUpdate',boss:msg.boss,bosses});}
+  if(msg.type==='bossDefeated'&&(msg.boss==='warden'||msg.boss==='witch')&&!bossRespawnTimers.has(msg.boss)){
+   const key=msg.boss;bosses[key]=0;broadcast({type:'bossUpdate',boss:key,bosses});
+   const timer=setTimeout(()=>{
+    const otherKey=key==='warden'?'witch':'warden';
+    const p=randomBossPoint(bossPositions[otherKey]);
+    bossPositions[key]=p;bosses[key]=bossMaxHP[key];bossRespawnTimers.delete(key);
+    broadcast({type:'bossRespawn',boss:key,x:p.x,z:p.z,hp:bosses[key],bosses,bossPositions});
+   },180000);
+   bossRespawnTimers.set(key,timer);
+  }
   if(msg.type==='enemyKilled'&&typeof msg.enemyId==='string'&&msg.enemyId.length<=100){
    const enemyId=msg.enemyId;
    if(!deadEnemies.has(enemyId)){
