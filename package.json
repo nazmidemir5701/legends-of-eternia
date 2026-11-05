@@ -1,0 +1,55 @@
+{
+  "name": "legends-of-eternia",
+  "version": "0.6.1",
+  "private": true,
+  "description": "LEGENDS OF ETERNIA shared-world playtest with contribution-based loot and party distribution",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "node server.js",
+    "desktop": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.legendsofeternia.game",
+    "productName": "LEGENDS OF ETERNIA",
+    "asar": true,
+    "files": [
+      "electron-main.js",
+      "server.js",
+      "public/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "LEGENDS-OF-ETERNIA-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LEGENDS OF ETERNIA"
+    },
+    "artifactName": "LEGENDS-OF-ETERNIA-Setup-${version}.${ext}"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

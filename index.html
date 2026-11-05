@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legends of Eternia</title>
+<style>
+  *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#09111d;color:#fff;font-family:system-ui,Segoe UI,sans-serif}
+  #game{display:block;width:100%;height:100%}
+  #hud{position:fixed;inset:0;pointer-events:none}
+  .panel{background:rgba(8,17,31,.76);border:1px solid rgba(157,205,255,.28);backdrop-filter:blur(8px);border-radius:12px;padding:10px 14px}
+  #top{position:absolute;left:16px;top:16px;display:flex;gap:10px;align-items:flex-start}
+  #brand{font-weight:800;letter-spacing:.12em;color:#bde7ff;font-size:13px}
+  #stats{font-size:13px;color:#e6f5ff;margin-top:4px}
+  #help{position:absolute;left:16px;bottom:16px;font-size:12px;line-height:1.7;color:#d6e7f6}
+  #notice{position:absolute;right:16px;top:16px;max-width:260px;font-size:12px;color:#d6e7f6}
+  #crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#d9f7ff;box-shadow:0 0 10px #7bdcff;transform:translate(-50%,-50%);opacity:.6}
+  #start{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(22,57,86,.55),rgba(3,9,18,.94));z-index:5}
+  #startCard{width:min(92vw,440px);padding:30px;background:rgba(8,18,34,.92);border:1px solid rgba(151,218,255,.35);border-radius:20px;text-align:center;box-shadow:0 20px 80px #0009}
+  h1{font-size:clamp(24px,5vw,38px);line-height:1.08;margin:0 0 8px;color:#c8efff;letter-spacing:.05em}
+  #startCard p{color:#c1d4e6;font-size:14px;line-height:1.5}
+  input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #54728f;background:#101f32;color:white;font-size:16px;margin:10px 0}
+  button{width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(100deg,#42b7dc,#637df2);color:#06111d;font-weight:800;font-size:16px;cursor:pointer}
+  #connection{font-size:12px;color:#91a9be;margin-top:12px}
+  @media(max-width:600px){#notice{display:none}#help{font-size:10px;max-width:230px}}
+
+  #gamepanel{position:absolute;right:16px;bottom:16px;width:min(330px,42vw);max-height:52vh;overflow:auto;font-size:12px;pointer-events:auto;color:#e5f3ff}
+  #gamepanel h3{margin:3px 0 8px;color:#bde7ff;font-size:13px}
+  #gamepanel button,.modal button{width:auto;padding:7px 10px;margin:3px 2px;font-size:11px;border-radius:8px}
+  #gamepanel .small{color:#9fb8cc;font-size:11px;line-height:1.5}
+  #feed{position:absolute;left:16px;top:110px;width:min(350px,45vw);font-size:12px;line-height:1.5;color:#f5f8ff;text-shadow:0 1px 3px #000}
+  .feedline{background:#08111dbb;border-left:3px solid #63c9e8;padding:5px 8px;margin:4px 0;border-radius:4px}
+  .modal{position:fixed;inset:0;display:none;place-items:center;background:#030914cc;z-index:8;padding:16px}
+  .modal .card{width:min(94vw,600px);max-height:85vh;overflow:auto;padding:22px;background:#0b1a2d;border:1px solid #7abfe0;border-radius:18px;box-shadow:0 20px 80px #000b}
+  .modal h2{margin:0 0 8px;color:#c8efff}.modal p{color:#c3d7e8;font-size:13px;line-height:1.5}
+  .choicegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+  .choicegrid button{width:100%;min-height:58px;background:#18334d;color:#eaf7ff;border:1px solid #4a789b}
+  .choicegrid button:hover{background:#245274}
+  .hpbar{height:7px;background:#25384b;border-radius:8px;overflow:hidden;margin-top:4px}.hpbar span{display:block;height:100%;background:#e85e68}
+  #vitals{position:absolute;left:50%;bottom:88px;transform:translateX(-50%);width:min(330px,52vw);padding:8px 12px;font-size:11px}
+  .vital-label{display:flex;justify-content:space-between;color:#dceeff;margin:2px 0}
+  .vital-track{height:9px;background:#273344;border-radius:8px;overflow:hidden;margin-bottom:5px}
+  .vital-track span{display:block;height:100%;width:100%;background:linear-gradient(90deg,#9e263a,#ed6672);transition:width .15s}
+  .vital-track.mana span{background:linear-gradient(90deg,#2354a8,#5fc5ff)}
+  #skillbar{position:absolute;left:50%;bottom:12px;pointer-events:auto;transform:translateX(-50%);display:flex;align-items:center;gap:5px;pointer-events:auto;padding:7px}
+  #skillSlots{display:flex;gap:5px}
+  .skill-slot{width:48px;height:48px;border:1px solid #83b6d9;border-radius:8px;background:linear-gradient(145deg,#243d58,#0c1828);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;cursor:pointer}
+  .skill-slot b{font-size:12px;color:#aee8ff}.skill-slot small{max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #skillbar button{width:auto;padding:8px 9px;font-size:10px;margin:0}
+  @media(max-width:760px){#skillbar{gap:3px;max-width:96vw;flex-wrap:wrap;justify-content:center}.skill-slot{width:40px;height:42px}#vitals{bottom:120px}}
+  @media(max-width:600px){#gamepanel{width:46vw;max-height:40vh;right:8px;bottom:8px}#feed{left:8px;top:100px;width:45vw}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div id="top">
+    <div class="panel">
+      <div id="brand">LEGENDS OF ETERNIA</div>
+      <div id="stats">Seviye 1 · XP 0 · Kristal 0</div>
+    </div>
+  </div>
+  <div id="notice" class="panel">Diğer oyuncular aynı dünyada görünür. Sunucu bağlantısı durumunu başlangıç ekranında görebilirsin.</div>
+  <div id="help" class="panel">W A S D — Hareket<br>Fare — Kamerayı döndür<br>SPACE — Zıpla<br>E — Kristal topla<br>Sol tık — Saldır · 1 — Yetenek · P — Yoldaşa hedef göster<br>ESC — Fareyi serbest bırak</div>
+
+  <div id="vitals" class="panel">
+    <div class="vital-label">CAN <span id="hpText">100 / 100</span></div><div class="vital-track"><span id="hpFill"></span></div>
+    <div class="vital-label">MANA <span id="manaText">100 / 100</span></div><div class="vital-track mana"><span id="manaFill"></span></div>
+  </div>
+  <div id="skillbar" class="panel">
+    <div id="skillSlots"></div>
+    <button id="openSkillBook" type="button">K · Beceriler</button>
+    <button id="healthPotion" type="button">Can iksiri (H) × <span id="hpPotionCount">5</span></button>
+    <button id="manaPotion" type="button">Mana iksiri (J) × <span id="manaPotionCount">5</span></button>
+  </div>
+  <div id="crosshair"></div>
+  <div id="feed"></div>
+  <div id="gamepanel" class="panel">
+    <h3>MACERACI DEFTERİ</h3>
+    <div id="region">Bölge: Başlangıç Köyü</div>
+    <div id="classline">Sınıf: Henüz seçilmedi</div>
+    <div id="walletline" class="small">Cüzdan: 0 altın · 0 gümüş · 0 bakır</div>
+    <div id="skillline">Başlangıç yeteneği: hazırlanıyor</div>
+    <div id="bossline" class="small">İki kadim bossu yen: ana köylerin yolu açılsın.</div>
+    <hr style="border-color:#35516a">
+    <div id="equipline" class="small">Ekipman: Beyaz başlangıç ekipmanı</div>
+    <div id="equipStats" class="small">Kuşanılmış bonus: +1 savunma · +10 can</div>
+    <div id="eventline" class="small">10. seviyede etkinlik/zindan açılır.</div>
+    <div class="small">Para: 1 altın = 1.000 gümüş · 1 gümüş = 1.000 bakır</div>
+    <div id="petline" class="small">Yoldaş: Gümüş Tilki · Sıradan · Seviye 1</div>
+    <div id="petmutline" class="small">Mutasyon: Yok · Mutasyon özü: 0</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px">
+      <button id="petCycle" type="button">Evcil hayvan seç</button>
+      <button id="petFeed" type="button">Besle (5 kristal)</button>
+      <button id="petMutate" type="button">Mutasyon (10 kristal + öz)</button>
+      <button id="mountCycle" type="button">Binek seç</button>
+      <button id="mountToggle" type="button">Bineğe bin (M)</button>
+      <button id="bestiaryOpen" type="button">Yaratık rehberi</button>
+    </div>
+    <div id="mountline" class="small">Binek: Gezgin Atı</div>
+    <div class="panel" style="margin-top:8px;padding:8px">
+      <b>Parti</b>
+      <div id="partyStatus" class="small">Partide değilsin.</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+        <button id="partyCreate" type="button">Parti kur</button>
+        <input id="partyInviteName" placeholder="Oyuncu adı" maxlength="18" style="width:110px">
+        <button id="partyInvite" type="button">Davet et</button>
+        <button id="partyLeave" type="button">Partiden ayrıl</button>
+      </div>
+    </div>
+    <div class="small" style="margin-top:7px">Sol tık: saldır · 1: yetenek · E: kristal/ganimet · WASD: hareket</div>
+  </div>
+</div>
+<div id="start">
+  <div id="startCard">
+    <h1>LEGENDS<br>OF ETERNIA</h1>
+    <p>Fantastik dünyaya hoş geldin. Karakterini seç, kristalleri keşfet ve diğer oyuncularla aynı dünyada maceraya başla.</p>
+    <input id="playerName" maxlength="18" placeholder="Oyuncu adın" value="Gezgin">
+    <button id="join">DÜNYAYA KATIL</button>
+    <div id="connection">Sunucu bağlantısı kontrol ediliyor…</div>
+  </div>
+</div>
+<div id="classModal" class="modal"><div class="card"><h2>10. Seviye — Sınıfını Seç</h2><p>Bir sınıf seç. Bu sınıfın ilk seçimini yapan oyuncuya özel bir beceri verilir; sonraki seçimlerde normal bir beceri kazanılır.</p><div class="choicegrid" id="classChoices"></div></div></div>
+<div id="villageModal" class="modal"><div class="card"><h2>Ana Köyünü Seç</h2><p>İki başlangıç bossu yenildi. Artık beş ana köyden birini seçebilirsin. Seçimin kalıcıdır.</p><div class="choicegrid" id="villageChoices"></div></div></div>
+<div id="eventModal" class="modal"><div class="card"><h2 id="eventTitle">Yeni meydan okuma açıldı!</h2><p id="eventDesc"></p><button id="eventClose">Dünyaya dön</button></div></div>
+<div id="bestiaryModal" class="modal"><div class="card"><h2>Yaratık Rehberi</h2><p>Yalnızca 1–10. seviye yaratıkların bilgileri gösterilir. 11. seviye ve üzerindeki yaratıkların bilgileri gizlidir.</p><div id="bestiaryContent"></div><button id="bestiaryClose">Kapat</button></div></div>
+<div id="skillModal" class="modal"><div class="card"><h2>Beceri Kitabı</h2><p>Öğrendiğin beceriler. Bir beceriye tıklayarak etkin çubuğa yerleştirebilirsin.</p><div id="skillList" class="choicegrid"></div><button id="skillClose">Kapat</button></div></div>
+<div id="lootModal" class="modal"><div class="card"><h2>Ganimet Sandığı</h2><p>Canavardan düşen ganimetleri topladın.</p><div id="lootContents"></div><button id="lootClose">Ganimetleri topla</button></div></div>
+<script src="./config.js"></script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+// Fixed world seed: every client creates the same starter map and monster positions.
+let worldRngState = 0x5EED1234;
+Math.random = () => {
+ worldRngState = (worldRngState * 1664525 + 1013904223) >>> 0;
+ return worldRngState / 4294967296;
+};
+
+const canvas = document.querySelector('#game');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMappingExposure = 1.28;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x91c9e8);
+scene.fog = new THREE.Fog(0x91c9e8, 45, 155);
+const camera = new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300);
+const hemi = new THREE.HemisphereLight(0xd9f2ff,0x53654a,2.25); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffedcf,2.6); sun.position.set(-35,55,25); sun.castShadow=true; sun.shadow.mapSize.set(4096,4096); scene.add(sun);
+
+const mat = (color,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const groundMat=mat(0x477b55), trunkMat=mat(0x5a3e2c), leafMat=mat(0x245b4a), rockMat=mat(0x718493), goldMat=new THREE.MeshStandardMaterial({color:0x70eaff,emissive:0x1685bb,emissiveIntensity:1.7,metalness:.35,roughness:.25});
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(240,240,48,48),groundMat); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+function heightAt(x,z){ return Math.sin(x*.055)*1.2 + Math.cos(z*.06)*.9 + Math.sin((x+z)*.035)*1.1; }
+function makeTree(x,z,s=1){
+ const y=heightAt(x,z);
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.34*s,2.3*s,7),trunkMat); trunk.position.set(x,y+1.1*s,z); trunk.castShadow=true; scene.add(trunk);
+ const crown=new THREE.Mesh(new THREE.ConeGeometry(1.35*s,3.3*s,7),leafMat); crown.position.set(x,y+3*s,z); crown.castShadow=true; scene.add(crown);
+}
+for(let i=0;i<115;i++){let a=Math.random()*Math.PI*2,r=12+Math.random()*95,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x)<9&&Math.abs(z)<9)continue;makeTree(x,z,.65+Math.random()*.8);}
+for(let i=0;i<24;i++){let x=(Math.random()-.5)*180,z=(Math.random()-.5)*180;let m=new THREE.Mesh(new THREE.DodecahedronGeometry(2+Math.random()*5,0),rockMat);m.position.set(x,heightAt(x,z)+1,z);m.scale.y=.8;m.castShadow=true;scene.add(m);}
+
+const crystals=[];
+for(let i=0;i<22;i++){
+ let a=Math.random()*Math.PI*2,r=12+Math.random()*65,x=Math.cos(a)*r,z=Math.sin(a)*r;
+ const c=new THREE.Mesh(new THREE.OctahedronGeometry(.8+Math.random()*.35),goldMat);c.position.set(x,heightAt(x,z)+1.25,z);c.rotation.y=Math.random()*6;c.userData.baseY=c.position.y;scene.add(c);crystals.push(c);
+ const light=new THREE.PointLight(0x43d9ff,1.1,7);light.position.copy(c.position);scene.add(light);
+}
+const pathMat=mat(0xb7a57c);
+const path=new THREE.Mesh(new THREE.RingGeometry(7.5,9,64),pathMat);path.rotation.x=-Math.PI/2;path.position.y=.04;scene.add(path);
+
+// Player avatar: stylized low-poly adventurer
+function createAvatar(color=0x3c8edb){
+ const g=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.85,4,8),mat(color,.65));body.position.y=1.25;body.castShadow=true;g.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.36,12,10),mat(0xf0c6a3));head.position.y=2.12;head.castShadow=true;g.add(head);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.38,10,7,0,Math.PI*2,0,Math.PI*.55),mat(0x29283b));hair.position.set(0,2.23,-.04);g.add(hair);
+ const cape=new THREE.Mesh(new THREE.ConeGeometry(.48,1.15,5),mat(0x793d9c));cape.position.set(0,1.25,-.43);cape.rotation.x=-.15;g.add(cape);
+ const legMat=mat(0x25354d);
+ for(const x of [-.22,.22]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.14,.17,.65,7),legMat);leg.position.set(x,.38,0);leg.castShadow=true;g.add(leg);}
+ return g;
+}
+const player=createAvatar();scene.add(player);
+let myId=null, ws=null, joined=false, xp=0, crystalCount=0, level=1;
+let copperCoins=Math.max(0,Number(localStorage.getItem('eterniaCopperCoins')||0));
+const others=new Map();
+const nameLabels=new Map();
+const stats=document.querySelector('#stats');
+const connection=document.querySelector('#connection');
+const keys={};
+let yaw=0,pitch=.22,mouseLocked=false,velocityY=0,onGround=true;
+const clock=new THREE.Clock();
+
+function updateStats(){
+ level=1+Math.floor(xp/100);
+ stats.textContent=`Seviye ${level} · XP ${xp} · Kristal ${crystalCount}`;
+ const gold=Math.floor(copperCoins/1000000), silver=Math.floor((copperCoins%1000000)/1000), copper=copperCoins%1000;
+ const wallet=$('walletline'); if(wallet) wallet.textContent=`Cüzdan: ${gold} altın · ${silver} gümüş · ${copper} bakır`;
+ const eq=inventory[equippedItemIndex]; const equipStats=$('equipStats'); if(equipStats) equipStats.textContent=`Kuşanılmış bonus: +${eq?.defense||0} savunma · +${eq?.health||0} can`;
+}
+function connect(){
+ const protocol=location.protocol==='https:'?'wss':'ws';
+ const configured=window.ETERNIA_SERVER_URL||'';
+ const url=configured?configured:`${protocol}://${location.host}`;
+ try{
+  ws=new WebSocket(url);
+  ws.onopen=()=>{connection.textContent='Sunucuya bağlandı ✓';};
+  ws.onclose=()=>{connection.textContent='Sunucu bağlantısı yok · Tek oyunculu mod';};
+  ws.onerror=()=>{connection.textContent='Sunucuya bağlanılamadı · Tek oyunculu mod';};
+  ws.onmessage=(ev)=>{
+   const msg=JSON.parse(ev.data);
+   if(msg.type==='welcome'){
+    myId=msg.id;
+    if(msg.bosses){bosses=msg.bosses;bossDown={warden:bosses.warden<=0,witch:bosses.witch<=0};for(const [key,boss] of Object.entries(bossMeshes)){if(boss){boss.hp=bosses[key];if(boss.hp<=0){boss.dead=true;boss.mesh.visible=false;}}}}
+    if(msg.classFirst)classFirst=msg.classFirst;if(msg.party)handlePartyUpdate(msg.party);
+    (msg.deadEnemies||[]).forEach(id=>{const e=enemies.find(x=>x.id===id);if(e){e.dead=true;e.mesh.visible=false;}});
+    (msg.chests||[]).forEach(ch=>createLootChest(ch,false));
+    return;
+   }
+   if(msg.type==='enemyKilled'){const e=enemies.find(x=>x.id===msg.enemyId);if(e){e.dead=true;e.mesh.visible=false;}}
+   if(msg.type==='enemyRespawn'){const e=enemies.find(x=>x.id===msg.enemyId);if(e){e.hp=e.maxHp;e.dead=false;e.mesh.visible=true;}}
+   if(msg.type==='lootSpawn'){createLootChest(msg.chest,false);}
+   if(msg.type==='lootExpired'){const expired=lootChests.find(c=>c.id===msg.chestId);if(expired){scene.remove(expired.mesh);lootChests=lootChests.filter(c=>c!==expired);}}
+   if(msg.type==='lootClaimed'){
+    const chest=lootChests.find(c=>c.id===msg.chestId);
+    if(chest){chest.claimed=true;scene.remove(chest.mesh);lootChests=lootChests.filter(c=>c!==chest);}
+   }
+   if(msg.type==='lootReward'){showLootContents(msg.contents);}
+   if(msg.type==='lootDenied'){feed(msg.message||'Bu sandığı alamazsın.');}
+   if(msg.type==='partyUpdate'){handlePartyUpdate(msg.party);}
+   if(msg.type==='partyInviteReceived'){
+    const accept=window.confirm(`${msg.fromName} seni partisine davet etti. Katılmak istiyor musun?`);
+    if(accept)sendPartyAction('partyAccept');
+   }
+   if(msg.type==='partyError'||msg.type==='partyNotice'){feed(msg.message||'Parti bildirimi.');}
+   if(msg.type==='state'){
+    for(const p of msg.players){if(p.id===myId)continue;let o=others.get(p.id);if(!o){o=createAvatar(p.color);scene.add(o);others.set(p.id,o);}o.position.set(p.x,p.y,p.z);o.rotation.y=p.rotation||0;}
+    for(const [id,o] of others){if(!msg.players.some(p=>p.id===id)){scene.remove(o);others.delete(id);}}
+   }
+   if(msg.type==='leave'){const o=others.get(msg.id);if(o){scene.remove(o);others.delete(msg.id);}}
+   if(msg.type==='bossUpdate'){bosses=msg.bosses;bossDown={warden:bosses.warden<=0,witch:bosses.witch<=0};const b=bossMeshes[msg.boss];if(b){b.hp=bosses[msg.boss];if(b.hp<=0){b.dead=true;b.mesh.visible=false;}}refreshPanel();if(bossDown.warden&&bossDown.witch&&!chosenVillage)openVillageChoice();}
+   if(msg.type==='classFirst'){classFirst=msg.classes||{};}
+  };
+ }catch(e){connection.textContent='Tek oyunculu mod';}
+}
+connect();
+
+document.querySelector('#join').addEventListener('click',()=>{
+ joined=true;document.querySelector('#start').style.display='none';canvas.requestPointerLock?.();feed('Başlangıç yeteneğin: '+skills[0].name);if(level>=10&&!chosenClass)openClassChoice();if(bossDown.warden&&bossDown.witch&&!chosenVillage)openVillageChoice();refreshPanel();
+ if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:'join',name:document.querySelector('#playerName').value.slice(0,18)}));}
+});
+document.addEventListener('pointerlockchange',()=>mouseLocked=document.pointerLockElement===canvas);
+document.addEventListener('mousemove',e=>{if(mouseLocked){yaw-=e.movementX*.0025;pitch=Math.max(-.15,Math.min(.75,pitch+e.movementY*.0018));}});
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(e.code==='KeyE')collectNearby();});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+canvas.addEventListener('click',()=>{if(joined&&!mouseLocked)canvas.requestPointerLock?.();});
+function collectNearby(){
+ let nearest=null,d=3.2;
+ for(const c of crystals){if(!c.visible)continue;const dist=c.position.distanceTo(player.position.clone().add(new THREE.Vector3(0,1,0)));if(dist<d){d=dist;nearest=c;}}
+ if(nearest){nearest.visible=false;crystalCount++;gainXP(25);feed('Kristal topladın: +25 XP');saveProgress();}
+}
+
+// ===== MMORPG PROGRESSION SYSTEMS (prototype) =====
+const $ = id => document.getElementById(id);
+const feed = (msg) => { const el=document.createElement('div');el.className='feedline';el.textContent=msg;$('feed').prepend(el);while($('feed').children.length>5)$('feed').lastChild.remove(); };
+const classData = {
+  'Savaşçı': {role:'Yakın dövüş / hasar',skills:['Kasırga Darbesi','Kırılmaz İrade','Çelik Fırtına'],special:'Ejder Keseni'},
+  'Rahip': {role:'İyileştirme / destek',skills:['Işık Şifası','Arınma Dalgası','Kutsal Kalkan'],special:'İlahi Mucize'},
+  'Okçu': {role:'Uzak menzil / kritik',skills:['Delici Atış','Çoklu Ok','Kartal Gözü'],special:'Yıldız Yağmuru'},
+  'Suikastçi': {role:'Gizlilik / ani hasar',skills:['Gölge Adımı','Zehirli Bıçak','Sessiz Kesik'],special:'Hiçlikte Kayboluş'},
+  'Tank': {role:'Savunma / dikkat çekme',skills:['Sarsılmaz Duruş','Kalkan Hücumu','Taunt'],special:'Dağ Gibi Yemin'}
+};
+const starterSkills=['Alev Kıvılcımı','Buz Parçası','Rüzgâr Kesiti','Kıvılcım Zinciri','Küçük İyileştirme'];
+const rarities=['Kara Demir','Tunç','Bronz','Gümüş','Altın','Kara Altın','Platin','Elmas','Yıldız','Ölümsüz','Tanrısal'];
+const rarityColors=['#9aa3ad','#b97848','#cd8a56','#cbd5e1','#ffd65c','#b58b45','#8de2ed','#8db7ff','#d6a5ff','#f5f5ff','#ffdf91'];
+const villages=[
+ {name:'Alevyurt',desc:'Volkan vadisi; saldırı ve zanaat geleneği.',x:48,z:35,color:0xd36b42},
+ {name:'Ayışığı Limanı',desc:'Kıyı şehri; ticaret ve keşif merkezi.',x:-52,z:34,color:0x5ca6d6},
+ {name:'Kökorman',desc:'Kadim orman; doğa ve şifa geleneği.',x:52,z:-42,color:0x55a56a},
+ {name:'Fırtınakale',desc:'Dağ geçidi; savunma ve savaş okulu.',x:-52,z:-42,color:0x8e83c8},
+ {name:'Yıldızova',desc:'Büyülü düzlük; akademi ve yıldız gözlemcileri.',x:0,z:-72,color:0xb49bdc}
+];
+let chosenClass=localStorage.getItem('eterniaClass')||'';
+let chosenVillage=localStorage.getItem('eterniaVillage')||'';
+let skills=JSON.parse(localStorage.getItem('eterniaSkills')||'null')||[{name:starterSkills[Math.floor(Math.random()*starterSkills.length)],kind:'Başlangıç',power:18}];
+let inventory=JSON.parse(localStorage.getItem('eterniaInventory')||'null')||[{name:'Yolcu Zırhı',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'},{name:'Eski Bot',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'}];
+let equippedItemIndex=Math.max(0,Number(localStorage.getItem('eterniaEquippedItemIndex')||0));
+if(inventory[equippedItemIndex]){maxHP=100+(inventory[equippedItemIndex].health||0);playerHP=maxHP;}
+let currentRegion='Başlangıç Köyü', bosses={warden:1000,witch:1250}, bossDown={warden:false,witch:false};
+let classFirst={}; let lastMilestone=0; let playerHP=100, maxHP=100, attackCooldown=0, skillCooldown=0, deathCooldown=0;
+let enemies=[], bossMeshes={}, villageMeshes=[];
+const regionName=()=>chosenVillage||'Başlangıç Köyü';
+function persist(){localStorage.setItem('eterniaClass',chosenClass);localStorage.setItem('eterniaVillage',chosenVillage);localStorage.setItem('eterniaSkills',JSON.stringify(skills));localStorage.setItem('eterniaInventory',JSON.stringify(inventory));localStorage.setItem('eterniaXP',String(xp));localStorage.setItem('eterniaCrystals',String(crystalCount));localStorage.setItem('eterniaCopperCoins',String(copperCoins));}
+const savedXP=Number(localStorage.getItem('eterniaXP')); if(Number.isFinite(savedXP)&&savedXP>0){xp=savedXP;level=1+Math.floor(xp/100);}
+const savedCrystals=Number(localStorage.getItem('eterniaCrystals'));if(Number.isFinite(savedCrystals))crystalCount=savedCrystals;
+function equipItem(index){
+ if(!Number.isInteger(index)||index<0||index>=inventory.length)return;
+ equippedItemIndex=index;
+ localStorage.setItem('eterniaEquippedItemIndex',String(index));
+ const item=inventory[index];
+ maxHP=100+(item.health||0);
+ playerHP=Math.min(maxHP,playerHP+(item.health||0));
+ feed(`${item.name} kuşanıldı: +${item.defense||0} savunma, +${item.health||0} can.`);
+ refreshPanel();updateStats();updateVitals();
+}
+function refreshPanel(){
+ $('classline').textContent='Sınıf: '+(chosenClass||'10. seviyede seçilecek');
+ $('skillline').textContent='Yetenekler: '+skills.map(x=>x.name).join(', ');
+ $('region').textContent='Bölge: '+regionName();
+ $('bossline').textContent=`Başlangıç bossları: ${bossDown.warden?'Muhafız ✓':'Taş Muhafız'} · ${bossDown.witch?'Cadı ✓':'Sis Cadısı'} — Ana köyler ${bossDown.warden&&bossDown.witch?'açık':'kilitli'}`;
+ $('equipline').innerHTML='<b>Çanta / Ekipman:</b><br>'+inventory.map((x,i)=>`<span style="color:${x.rarity===-1?'#ffffff':rarityColors[x.rarity]}">${x.name} (${x.tier||rarities[x.rarity]||'Beyaz'} · ${x.defense||0} savunma · ${x.health||0} can) ${i===equippedItemIndex?'✓ Kuşanıldı':''}</span> <button data-equip-index="${i}" type="button">Kuşan</button>`).join('<br>')+'<br><span class="small">Eşyayı çantadan Kuşan düğmesiyle kullan. Ek can maksimum canına eklenir; savunma değeri ekipmanında görüntülenir.</span>';
+ $('equipline').querySelectorAll('[data-equip-index]').forEach(btn=>btn.addEventListener('click',()=>equipItem(Number(btn.dataset.equipIndex))));
+ $('eventline').textContent=`Sonraki etkinlik/zindan: ${Math.ceil(level/10)*10}. seviye`;
+}
+function saveProgress(){persist();refreshPanel();updateStats();}
+function gainXP(amount){
+ const old=level;xp+=amount;level=1+Math.floor(xp/100);saveProgress();
+ if(level>old){feed(`Seviye atladın: ${level}!`);if(level%10===0){openMilestone(level);}if(level>=10&&!chosenClass){openClassChoice();}}
+}
+function openClassChoice(){
+ if(chosenClass)return;
+ const box=$('classChoices');box.innerHTML='';
+ for(const [name,data] of Object.entries(classData)){const b=document.createElement('button');b.innerHTML=`<b>${name}</b><br><small>${data.role}</small>`;b.onclick=()=>chooseClass(name);box.append(b);}
+ $('classModal').style.display='grid';document.exitPointerLock?.();
+}
+function chooseClass(name){
+ if(chosenClass)return;
+ chosenClass=name;
+ const special=!!classFirst[name]===false;
+ const data=classData[name];const skill=special?data.special:data.skills[Math.floor(Math.random()*data.skills.length)];
+ skills.push({name:skill,kind:special?'İlk Seçen Özel':'Sınıf Yeteneği',power:special?55:32});
+ classFirst[name]=true;localStorage.setItem('eterniaClassFirst_'+name,'claimed');
+ localStorage.setItem('eterniaClass',name);
+ $('classModal').style.display='none';feed(`${name} sınıfını seçtin. ${skill} kazandın${special?' — bu sınıfın ilk seçenisin!':' — sıradan sınıf yeteneği'}.`);
+ if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'chooseClass',className:name}));
+ saveProgress();
+}
+function openVillageChoice(){
+ if(!(bossDown.warden&&bossDown.witch)||chosenVillage)return;
+ const box=$('villageChoices');box.innerHTML='';
+ villages.forEach(v=>{const b=document.createElement('button');b.innerHTML=`<b>${v.name}</b><br><small>${v.desc}</small>`;b.onclick=()=>{chosenVillage=v.name;localStorage.setItem('eterniaVillage',chosenVillage);$('villageModal').style.display='none';player.position.set(v.x,0,v.z);currentRegion=v.name;feed(`${v.name} ana köyüne yerleştin.`);saveProgress();};box.append(b);});
+ $('villageModal').style.display='grid';document.exitPointerLock?.();
+}
+function openMilestone(n){
+ const title=n%10===0?`${n}. Seviye Meydan Okuması`:'Yeni etkinlik';
+ $('eventTitle').textContent=title;
+ $('eventDesc').textContent=`${n}. seviyeye ulaştın! Zor seviye ${Math.floor(n/10)} zindanı ve dönemsel etkinlik açıldı. Zindanda dereceye girenler nadir ekipman, beceri kitabı ve unvan kazanabilir. Bu prototipte etkinlik ödülleri deneme amaçlıdır.`;
+ $('eventModal').style.display='grid';document.exitPointerLock?.();lastMilestone=n;
+}
+$('eventClose').onclick=()=>$('eventModal').style.display='none';
+function spawnCombatEffect(position,color=0x70dfff,scale=1){
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.7*scale,.06*scale,8,32),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95}));
+ ring.position.copy(position);ring.position.y+=.5;ring.rotation.x=Math.PI/2;scene.add(ring);
+ const light=new THREE.PointLight(color,2.2,8*scale);light.position.copy(position);light.position.y+=1;scene.add(light);
+ combatEffects.push({mesh:ring,light,life:.48,max:.48});
+}
+function makeChestMesh(){
+ const g=new THREE.Group();
+ const wood=mat(0x75451f,.62),gold=mat(0xf2bd4f,.38,.65),dark=mat(0x30241a);
+ const base=new THREE.Mesh(new THREE.BoxGeometry(1.05,.65,.72),wood);base.position.y=.42;base.castShadow=true;g.add(base);
+ const lid=new THREE.Mesh(new THREE.BoxGeometry(1.08,.24,.76),gold);lid.position.y=.86;lid.castShadow=true;g.add(lid);
+ const band=new THREE.Mesh(new THREE.BoxGeometry(1.12,.12,.8),gold);band.position.y=.45;g.add(band);
+ const lock=new THREE.Mesh(new THREE.BoxGeometry(.18,.25,.08),dark);lock.position.set(0,.62,.4);g.add(lock);
+ const glow=new THREE.PointLight(0xffc95e,1.4,5);glow.position.y=1.2;g.add(glow);
+ return g;
+}
+function createLootChest(chest,broadcast=true){
+ if(!chest||lootChests.some(c=>c.id===chest.id))return;
+ const mesh=makeChestMesh();mesh.position.set(chest.x,heightAt(chest.x,chest.z),chest.z);scene.add(mesh);
+ const obj={...chest,mesh};lootChests.push(obj);
+ if(broadcast&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'lootSpawn',chest:{id:obj.id,x:obj.x,z:obj.z,contents:obj.contents}}));
+}
+function spawnLootChest(enemy){
+ const coins=enemy.boss?(enemy.level*2400+Math.floor(Math.random()*1800)):(enemy.level*45+Math.floor(Math.random()*35));
+ const itemChance=enemy.boss?.95:.72;
+ const item=Math.random()<itemChance?rollEquipment(enemy.level):null;
+ const contents={coins,item};
+ const chest={id:`${enemy.id}-chest`,x:enemy.x,z:enemy.z,contents};
+ createLootChest(chest,true);
+ if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'enemyKilled',enemyId:enemy.id}));
+ feed(`${enemy.name} bir ganimet sandığı düşürdü! Sandığa tıklayarak aç.`);
+}
+function applyLootContents(contents){
+ if(!contents)return;
+ if(contents.coins){copperCoins+=contents.coins;const g=Math.floor(contents.coins/1000000),s=Math.floor((contents.coins%1000000)/1000),c=contents.coins%1000;feed(`Sandıktan ${g?g+' altın ':''}${s?s+' gümüş ':''}${c?c+' bakır':''} para aldın.`);}
+ if(contents.item){inventory.push(contents.item);const it=contents.item;feed(`Sandıktan eşya çıktı: ${it.name} · ${it.tier|| (it.rarity===-1?'Beyaz':rarities[it.rarity])} · ${it.defense||0} savunma · ${it.health||0} can`);}
+ saveProgress();
+}
+function showLootContents(contents){
+ pendingLoot=contents;
+ const box=$('lootContents');
+ const item=contents.item;
+ box.innerHTML=`<div class="panel"><b>Para:</b> ${contents.coins||0} bakır değerinde<br><b>Eşya:</b> ${item?`${item.name} · ${item.tier||'Beyaz'} · ${item.defense||0} savunma · ${item.health||0} can`:'Bu sandıkta ekipman yok'}</div>`;
+ $('lootModal').style.display='grid';document.exitPointerLock?.();
+}
+function openLootChest(chest){
+ if(!chest||chest.claimed)return;
+ if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:'lootClaim',chestId:chest.id}));}
+ else{
+  chest.claimed=true;scene.remove(chest.mesh);lootChests=lootChests.filter(c=>c!==chest);showLootContents(chest.contents);
+ }
+}
+function collectPendingLoot(){
+ if(pendingLoot){applyLootContents(pendingLoot);pendingLoot=null;}
+ $('lootModal').style.display='none';
+}
+function tryOpenChest(ev){
+ if(!lootChests.length)return false;
+ const ray=new THREE.Raycaster();
+ const pointer=new THREE.Vector2();
+ if(mouseLocked){pointer.set(0,0);}else{pointer.x=(ev.clientX/innerWidth)*2-1;pointer.y=-(ev.clientY/innerHeight)*2+1;}
+ ray.setFromCamera(pointer,camera);
+ const hits=ray.intersectObjects(lootChests.map(c=>c.mesh),true);
+ if(!hits.length)return false;
+ let node=hits[0].object;while(node.parent&&!lootChests.some(c=>c.mesh===node))node=node.parent;
+ const chest=lootChests.find(c=>c.mesh===node);
+ if(chest){openLootChest(chest);return true;}
+ return false;
+}
+function castSkillEffect(e,color=0x6bdfff){
+ if(e)spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.6,e.z),color,1.7);
+}
+function rollEquipment(monsterLevel=1){
+ if(!chosenVillage){
+  const n=Math.max(1,Math.min(10,monsterLevel));
+  const names=['Gezgin Kumaş Zırhı','Orman Derisi Yeleği','Dikenli Domuz Göğüslüğü','Kül Muhafız Zırhı','Sis Avcısı Zırhı'];
+  const name=names[Math.min(names.length-1,Math.floor((n-1)/2))];
+  return {name,rarity:-1,tier:'Beyaz',classRequirement:null,levelRequirement:null,defense:Math.max(1,Math.round((n-1)*1.8+1)),health:Math.round(10*Math.pow(n,1.285)),monsterLevel:n,description:'Sınıfsız ve seviye şartı olmayan başlangıç ekipmanı.'};
+ }
+ const r=Math.min(10,Math.floor(Math.random()*11));
+ const names=['Kara Demir Kılıcı','Tunç Zırh','Bronz Kolye','Gümüş Yay','Altın Miğfer','Kara Altın Hançer','Platin Asa','Elmas Kalkan','Yıldız Pelerini','Ölümsüz Mührü','Tanrısal Kalıntı'];
+ return {name:names[r],rarity:r,defense:Math.round((monsterLevel||1)*1.8),health:(monsterLevel||1)*10};
+}
+function awardCoins(monster){
+ const n=Math.max(1,monster.level||1);
+ const amount=monster.boss?(n*1800+Math.floor(Math.random()*1200)):(n*35+Math.floor(Math.random()*25));
+ copperCoins+=amount;
+ const g=Math.floor(amount/1000000),s=Math.floor((amount%1000000)/1000),c=amount%1000;
+ feed(`${monster.name} ganimeti: ${g?g+' altın ':''}${s?s+' gümüş ':''}${c?c+' bakır':''} para.`);
+ saveProgress();
+}
+function openBestiary(){
+ const content=$('bestiaryContent'); content.innerHTML='';
+ const available=[...new Map(enemies.filter(e=>!e.boss&&e.level<=10).map(e=>[e.name,e])).values()];
+ for(const e of available){
+  const box=document.createElement('div');box.className='panel';box.style.margin='8px 0';
+  const drops=e.level>=6?'Beyaz başlangıç zırhı, bakır/gümüş para ve yaratık ganimeti':'Beyaz başlangıç ekipmanı, bakır para ve yaratık ganimeti';
+  box.innerHTML=`<b>${e.name}</b> · Seviye ${e.level}<br><span class="small">Can: ${e.maxHp} · Saldırı: ${e.attack} · Hız: ${e.speed.toFixed(1)}</span><br><span class="small">Düşürebilir: ${drops}</span><br><span class="small">Ekipman kullanımı: Çantada Kuşan düğmesine bas. Sınıf/seviye şartı yoktur. Örnek: seviye 1 yaratık yaklaşık 1 savunma + 10 can; seviye 6 yaratık 10 savunma + 100 can verir.</span>`;
+  content.append(box);
+ }
+ const bosses=enemies.filter(e=>e.boss&&e.level<=10);
+ for(const e of bosses){
+  const box=document.createElement('div');box.className='panel';box.style.margin='8px 0';
+  box.innerHTML=`<b>${e.name}</b> · Boss · Seviye ${e.level}<br><span class="small">Can: ${e.maxHp} · Saldırı: ${e.attack} · Hız: ${e.speed.toFixed(1)}</span><br><span class="small">Düşürebilir: Beceri ganimeti, mutasyon özü, daha yüksek para ödülü ve ekipman.</span>`;
+  content.append(box);
+ }
+ if(!available.length&&!bosses.length)content.textContent='Şu anda bilgisi gösterilebilen yaratık bulunmuyor.';
+ $('bestiaryModal').style.display='grid';document.exitPointerLock?.();
+}
+$('bestiaryOpen').addEventListener('click',openBestiary);
+$('bestiaryClose').addEventListener('click',()=>$('bestiaryModal').style.display='none');
+
+function dropSkill(source){
+ if(source==='Boss'){mutationCores++;feed('Boss ganimeti: 1 Mutasyon Özü kazandın!');persistCompanion();refreshCompanionUI();}
+ const all=chosenClass?classData[chosenClass].skills:starterSkills;
+ const name=all[Math.floor(Math.random()*all.length)];
+ skills.push({name,kind:source+' Becerisi',power:38+Math.floor(Math.random()*20)});skillSlots[skills.length-1]=skills.length-1;persistConsumables();renderSkillBar();
+ feed(`${source} ganimeti: ${name} becerisi düştü!`);saveProgress();
+}
+function playerDeath(){
+ if(deathCooldown>0)return;deathCooldown=5;playerHP=maxHP;
+ if(chosenVillage){xp=Math.max(0,xp-100);level=Math.max(1,level-1);const lost=[];for(let i=0;i<2&&inventory.length;i++){const idx=Math.floor(Math.random()*inventory.length);lost.push(inventory.splice(idx,1)[0].name);}feed(`Ana köyde yenildin: 1 seviye kaybettin. Düşen ekipman: ${lost.join(', ')||'Ekipman yok'}.`);player.position.set(villages.find(v=>v.name===chosenVillage)?.x||0,0,villages.find(v=>v.name===chosenVillage)?.z||0);}
+ else{feed('Başlangıç köyünde yenildin. Seviye ve ekipman kaybetmedin.');player.position.set(0,0,0);}
+ saveProgress();
+}
+function makeEnemy(name,x,z,hp,boss=false,color=0x9d493d,monsterLevel=1,monsterSpeed=1.2){
+ const group=new THREE.Group();const body=new THREE.Mesh(boss?new THREE.DodecahedronGeometry(2.2,1):new THREE.DodecahedronGeometry(.85,0),mat(color,.7));body.position.y=boss?2.2:.9;body.castShadow=true;group.add(body);
+ const eyeMat=new THREE.MeshBasicMaterial({color:0xffd8a0});
+ for(const side of [-.35,.35]){const eye=new THREE.Mesh(new THREE.SphereGeometry(boss?.13:.07,8,6),eyeMat);eye.position.set(side,boss?2.5:1.1,.65);group.add(eye);}
+ group.position.set(x,heightAt(x,z),z);scene.add(group);
+ const e={id:`${boss?'boss':'mob'}-${enemies.length}-${name.replace(/[^a-z0-9]/gi,'').toLowerCase()}`,name,x,z,hp,maxHp:hp,boss,level:monsterLevel,speed:monsterSpeed,mesh:group,attack:Math.max(1,Math.round(monsterLevel*2.2)),dead:false};enemies.push(e);return e;
+}
+worldRngState=0xE71E2026; // aynı başlangıç yaratık yerleşimleri
+const stoneBoss=makeEnemy('Taş Muhafız',25,4,1000,true,0x687c8d,8,1.0);
+const mistBoss=makeEnemy('Sis Cadısı',-27,-4,1250,true,0x70559b,9,1.25);
+bossMeshes.warden=stoneBoss;bossMeshes.witch=mistBoss;
+const starterMonsters=[
+ {name:'Orman Tavşanı',level:1,hp:18,speed:1.8,attack:2,color:0xb5a58c},
+ {name:'Yaban Kurdu',level:3,hp:48,speed:2.4,attack:7,color:0x718b62},
+ {name:'Dikenli Domuz',level:6,hp:105,speed:1.35,attack:14,color:0x9b6b45},
+ {name:'Kül Goblini',level:7,hp:125,speed:1.65,attack:16,color:0x8e7655},
+ {name:'Sis Akrebi',level:9,hp:165,speed:1.1,attack:20,color:0x76659b}
+];
+for(let i=0;i<25;i++){
+ let a=Math.random()*Math.PI*2,r=17+Math.random()*50;
+ const kind=starterMonsters[i%starterMonsters.length];
+ makeEnemy(kind.name,Math.cos(a)*r,Math.sin(a)*r,kind.hp,false,kind.color,kind.level,kind.speed);
+}
+villages.forEach(v=>{
+ const marker=new THREE.Mesh(new THREE.CylinderGeometry(4,5,1,8),mat(v.color));marker.position.set(v.x,.25,v.z);scene.add(marker);villageMeshes.push(marker);
+ const tower=new THREE.Mesh(new THREE.ConeGeometry(2,7,6),mat(v.color));tower.position.set(v.x,4,v.z);scene.add(tower);
+});
+function updateRegion(){
+ if(!chosenVillage){currentRegion='Başlangıç Köyü';}
+ else currentRegion=chosenVillage;
+ $('region').textContent='Bölge: '+currentRegion;
+}
+function nearestEnemy(maxDist=5){
+ let best=null,d=maxDist;
+ for(const e of enemies){if(e.dead)continue;const dist=Math.hypot(e.x-player.position.x,e.z-player.position.z);if(dist<d){d=dist;best=e;}}
+ return best;
+}
+function reportEnemyDamage(enemy,damage){
+ if(ws&&ws.readyState===1&&enemy&&Number.isFinite(damage)){
+  ws.send(JSON.stringify({type:'enemyDamage',enemyId:enemy.id,damage}));
+ }
+}
+function handlePartyUpdate(party){
+ currentParty=party||null;
+ const status=$('partyStatus');
+ if(!status)return;
+ if(!currentParty){status.textContent='Partide değilsin.';return;}
+ const names=currentParty.members.map(m=>m.name+(m.id===currentParty.leaderId?' ★':''));
+ status.textContent=`${names.length}/5 · ${names.join(', ')}`;
+}
+let currentParty=null;
+function sendPartyAction(type,extra={}){
+ if(!ws||ws.readyState!==1){feed('Parti sistemi için çevrim içi sunucuya bağlanmalısın.');return;}
+ ws.send(JSON.stringify({type,...extra}));
+}
+$('partyCreate').addEventListener('click',()=>sendPartyAction('partyCreate'));
+$('partyInvite').addEventListener('click',()=>{
+ const name=$('partyInviteName').value.trim();
+ if(!name){feed('Davet etmek için oyuncu adını yaz.');return;}
+ sendPartyAction('partyInvite',{name});
+});
+$('partyLeave').addEventListener('click',()=>sendPartyAction('partyLeave'));
+function attackTarget(){
+ if(!joined||attackCooldown>0)return;
+ const e=nearestEnemy(6);if(!e){feed('Saldırmak için bir yaratığa yaklaş.');return;}
+ attackCooldown=.55;
+ const damage=chosenClass==='Savaşçı'?28:chosenClass==='Suikastçi'?31:chosenClass==='Okçu'?23:chosenClass==='Tank'?17:chosenClass==='Rahip'?15:20;
+ e.hp-=damage;reportEnemyDamage(e,damage);spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.8,e.z),0xffc06b,1);feed(`${e.name} üzerine ${damage} hasar!`);
+ if(e.boss&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));}
+ if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);
+  if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));if(bossDown.warden&&bossDown.witch){feed('İki boss da yenildi! Ana köylerin kapısı açıldı.');openVillageChoice();}}
+  
+ }
+ saveProgress();
+}
+let playerMana=100,maxMana=100;
+let healthPotions=Math.max(0,Number(localStorage.getItem('eterniaHealthPotions')||5));
+let manaPotions=Math.max(0,Number(localStorage.getItem('eterniaManaPotions')||5));
+let skillSlots=JSON.parse(localStorage.getItem('eterniaSkillSlots')||'null')||[0,1,2,3,4];
+function persistConsumables(){
+ localStorage.setItem('eterniaHealthPotions',String(healthPotions));
+ localStorage.setItem('eterniaManaPotions',String(manaPotions));
+ localStorage.setItem('eterniaSkillSlots',JSON.stringify(skillSlots));
+}
+function updateVitals(){
+ const hp=Math.max(0,Math.min(100,playerHP/maxHP*100)),mp=Math.max(0,Math.min(100,playerMana/maxMana*100));
+ $('hpFill').style.width=hp+'%';$('manaFill').style.width=mp+'%';
+ $('hpText').textContent=`${Math.round(playerHP)} / ${maxHP}`;$('manaText').textContent=`${Math.round(playerMana)} / ${maxMana}`;
+ $('hpPotionCount').textContent=healthPotions;$('manaPotionCount').textContent=manaPotions;
+}
+function renderSkillBar(){
+ const box=$('skillSlots');box.innerHTML='';
+ for(let i=0;i<5;i++){
+  const skill=skills[skillSlots[i]];
+  const b=document.createElement('button');b.className='skill-slot';b.type='button';
+  b.innerHTML=`<b>${i+1}</b><small>${skill?skill.name:'Boş slot'}</small>`;
+  b.title=skill?`${skill.name} · ${skill.power||0} güç`:'Beceri kitabından beceri yerleştir';
+  b.addEventListener('click',()=>{if(skill)useSkill(skillSlots[i]);});
+  box.append(b);
+ }
+}
+function openSkillBook(){
+ const list=$('skillList');list.innerHTML='';
+ skills.forEach((skill,index)=>{
+  const b=document.createElement('button');b.innerHTML=`<b>${skill.name}</b><br><small>${skill.kind||'Beceri'} · Güç ${skill.power||0}</small>`;
+  b.onclick=()=>{const slot=Number(prompt('Bu beceriyi hangi slota koymak istiyorsun? 1–5'));if(slot>=1&&slot<=5){skillSlots[slot-1]=index;persistConsumables();renderSkillBar();feed(`${skill.name}, ${slot}. slota yerleştirildi.`);}};
+  list.append(b);
+ });
+ $('skillModal').style.display='grid';document.exitPointerLock?.();
+}
+function drinkPotion(kind){
+ if(kind==='health'){
+  if(healthPotions<=0){feed('Can iksirin kalmadı.');return;}
+  if(playerHP>=maxHP){feed('Canın zaten dolu.');return;}
+  healthPotions--;playerHP=Math.min(maxHP,playerHP+55);feed('Can iksiri kullandın: +55 can.');
+ }else{
+  if(manaPotions<=0){feed('Mana iksirin kalmadı.');return;}
+  if(playerMana>=maxMana){feed('Manan zaten dolu.');return;}
+  manaPotions--;playerMana=Math.min(maxMana,playerMana+55);feed('Mana iksiri kullandın: +55 mana.');
+ }
+ persistConsumables();updateVitals();
+}
+$('openSkillBook').addEventListener('click',openSkillBook);
+$('skillClose').addEventListener('click',()=>$('skillModal').style.display='none');
+$('lootClose').addEventListener('click',collectPendingLoot);
+$('healthPotion').addEventListener('click',()=>drinkPotion('health'));
+$('manaPotion').addEventListener('click',()=>drinkPotion('mana'));
+renderSkillBar();updateVitals();
+
+function useSkill(skillIndex=skillSlots[0]){
+ if(!joined||skillCooldown>0||!skills.length)return;
+ const skill=skills[skillIndex];if(!skill)return;
+ if(playerMana<20){feed('Bu beceri için yeterli manan yok.');return;}playerMana-=20;updateVitals();
+ skillCooldown=5;const e=nearestEnemy(9);
+ if(e){const damage=skill.power||25;e.hp-=damage;reportEnemyDamage(e,damage);castSkillEffect(e,0x8b7bff);feed(`${skill.name}: ${damage} hasar!`);if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(bossDown.warden&&bossDown.witch)openVillageChoice();}}}
+ else{playerHP=Math.min(maxHP,playerHP+20);feed(`${skill.name}: 20 sağlık yenilendi.`);}
+ saveProgress();
+}
+document.addEventListener('mousedown',e=>{if(e.button===0&&joined){if(tryOpenChest(e))return;if(mouseLocked)attackTarget();}});
+document.addEventListener('keydown',e=>{
+ if(e.code==='Digit1')useSkill(skillSlots[0]);if(e.code==='Digit2')useSkill(skillSlots[1]);if(e.code==='Digit3')useSkill(skillSlots[2]);if(e.code==='Digit4')useSkill(skillSlots[3]);if(e.code==='Digit5')useSkill(skillSlots[4]);
+ if(e.code==='KeyK'&&joined)openSkillBook();if(e.code==='KeyH'&&joined)drinkPotion('health');if(e.code==='KeyJ'&&joined)drinkPotion('mana');
+});
+
+
+// ===== PET RAISING, COMPANION COMBAT & MOUNTS =====
+const petCatalog=[
+ {name:'Gümüş Tilki',kind:'fox',color:0xb7c6d1,damage:9},
+ {name:'Kül Kurdu',kind:'wolf',color:0x777f8d,damage:13},
+ {name:'Yıldız Ruhu',kind:'spirit',color:0x75d9ef,damage:11}
+];
+const mountCatalog=[
+ {name:'Gezgin Atı',kind:'horse',color:0x8b5b3b,speed:1.65},
+ {name:'Orman Geyiği',kind:'stag',color:0x9a7950,speed:1.8},
+ {name:'Gece Kurdu',kind:'direwolf',color:0x555d78,speed:1.9}
+];
+let petIndex=Number(localStorage.getItem('eterniaPetIndex')||0);
+let petLevel=Number(localStorage.getItem('eterniaPetLevel')||1);
+let petXP=Number(localStorage.getItem('eterniaPetXP')||0);
+let petBond=Number(localStorage.getItem('eterniaPetBond')||0);
+const petRarities=['Sıradan','Alışılmadık','Nadir','Destansı','Efsanevi','Mitik'];
+const petRarityWeights=[48,27,15,7,2.5,.5];
+const petRarityBonus=[1,1.12,1.28,1.5,1.8,2.2];
+const petRarityColors=[0xb8c1cc,0x75d69a,0x53b8ed,0xb17bfa,0xffc65c,0xff75d8];
+const petMutations=[
+ {name:'Alev',color:0xff7045,bonus:1.35,desc:'Saldırılara alev gücü ekler'},
+ {name:'Buz',color:0x75dfff,bonus:1.25,desc:'Soğuk enerjisiyle güçlenir'},
+ {name:'Yıldırım',color:0xffe45c,bonus:1.45,desc:'Daha yüksek saldırı gücü kazanır'},
+ {name:'Gölge',color:0x9c83df,bonus:1.4,desc:'Karanlık enerjiyle güçlenir'}
+];
+let petRarity=Number(localStorage.getItem('eterniaPetRarity')||0);
+if(localStorage.getItem('eterniaPetRarity')===null){let roll=Math.random()*100,total=0;for(let i=0;i<petRarityWeights.length;i++){total+=petRarityWeights[i];if(roll<=total){petRarity=i;break;}}localStorage.setItem('eterniaPetRarity',String(petRarity));}
+let petMutation=Number(localStorage.getItem('eterniaPetMutation')||-1);
+let mutationCores=Number(localStorage.getItem('eterniaMutationCores')||0);
+let mountIndex=Number(localStorage.getItem('eterniaMountIndex')||0);
+let mounted=false, petAttackTimer=0, petCommandTarget=null;
+function persistCompanion(){
+ localStorage.setItem('eterniaPetIndex',String(petIndex));
+ localStorage.setItem('eterniaPetLevel',String(petLevel));
+ localStorage.setItem('eterniaPetXP',String(petXP));
+ localStorage.setItem('eterniaPetBond',String(petBond));
+ localStorage.setItem('eterniaPetRarity',String(petRarity));
+ localStorage.setItem('eterniaPetMutation',String(petMutation));
+ localStorage.setItem('eterniaMutationCores',String(mutationCores));
+ localStorage.setItem('eterniaMountIndex',String(mountIndex));
+ localStorage.setItem('eterniaMounted',String(mounted));
+}
+function makePetModel(p){
+ const rarityColor=petRarityColors[petRarity]||petRarityColors[0];
+ const mutation=petMutations[petMutation];
+ const fur=mat(mutation?mutation.color:p.color,.8);
+ const g=new THREE.Group(), dark=mat(0x263343), eye= new THREE.MeshBasicMaterial({color:0xc9f8ff});
+ const body=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),fur);body.scale.set(1.25,.8,.85);body.position.y=.72;body.castShadow=true;g.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),fur);head.position.set(0,1.05,.48);head.castShadow=true;g.add(head);
+ const ears=[];
+ for(const x of [-.22,.22]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.13,.42,5),fur);ear.position.set(x,1.4,.46);g.add(ear);ears.push(ear);}
+ for(const x of [-.13,.13]){const e=new THREE.Mesh(new THREE.SphereGeometry(.045,6,6),eye);e.position.set(x,1.1,.77);g.add(e);}
+ const tail=new THREE.Mesh(new THREE.ConeGeometry(.18,.65,6),fur);tail.position.set(0,.88,-.65);tail.rotation.x=-1.1;g.add(tail);
+ for(const x of [-.3,.3])for(const z of [-.28,.3]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.42,6),dark);leg.position.set(x,.28,z);g.add(leg);}
+ if(p.kind==='spirit'){const aura=new THREE.PointLight(0x60dfff,1.4,5);aura.position.y=1;g.add(aura);}
+ const glow=new THREE.PointLight(mutation?mutation.color:rarityColor,petRarity>=3?1.5:.65,petRarity>=4?8:4);glow.position.y=1;g.add(glow);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.035,6,24),new THREE.MeshBasicMaterial({color:mutation?mutation.color:rarityColor}));
+ ring.rotation.x=Math.PI/2;ring.position.y=.08;g.add(ring);
+ return g;
+}
+let activePet=makePetModel(petCatalog[petIndex]||petCatalog[0]);scene.add(activePet);
+function makeMountModel(m){
+ const g=new THREE.Group(), coat=mat(m.color,.78), mane=mat(0x302a2a);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.9,4,8),coat);torso.rotation.x=Math.PI/2;torso.position.y=1.05;torso.castShadow=true;g.add(torso);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.32,.95,7),coat);neck.position.set(0,1.55,.45);neck.rotation.x=-.35;g.add(neck);
+ const head=new THREE.Mesh(new THREE.BoxGeometry(.42,.48,.55),coat);head.position.set(0,1.95,.78);g.add(head);
+ const maneMesh=new THREE.Mesh(new THREE.ConeGeometry(.28,.8,6),mane);maneMesh.position.set(0,1.85,.42);maneMesh.rotation.x=-.35;g.add(maneMesh);
+ for(const x of [-.3,.3])for(const z of [-.45,.42]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,.8,6),coat);leg.position.set(x,.42,z);g.add(leg);}
+ if(m.kind==='stag'){for(const x of [-.17,.17]){const horn=new THREE.Mesh(new THREE.ConeGeometry(.07,.85,5),mat(0xd8c49b));horn.position.set(x,2.35,.8);horn.rotation.z=x*1.6;g.add(horn);}}
+ return g;
+}
+let activeMount=makeMountModel(mountCatalog[mountIndex]||mountCatalog[0]);activeMount.visible=false;scene.add(activeMount);
+function refreshCompanionUI(){
+ const pet=petCatalog[petIndex]||petCatalog[0],mount=mountCatalog[mountIndex]||mountCatalog[0];
+ const mutation=petMutation>=0?petMutations[petMutation].name:'Yok';
+ $('petline').textContent=`Yoldaş: ${pet.name} · ${petRarities[petRarity]} · Seviye ${petLevel} · Bağ ${petBond}`;
+ $('petmutline').textContent=`Mutasyon: ${mutation} · Mutasyon özü: ${mutationCores}`;
+ $('mountline').textContent=`Binek: ${mount.name} · ${mounted?'Üzerindesin':'Yanında'}`;
+ $('mountToggle').textContent=mounted?'Binekten in (M)':'Bineğe bin (M)';
+}
+function switchPet(){
+ // Save the current companion's individual rarity and mutation before switching.
+ const rarityMap=JSON.parse(localStorage.getItem('eterniaPetRarityMap')||'{}');
+ const mutationMap=JSON.parse(localStorage.getItem('eterniaPetMutationMap')||'{}');
+ rarityMap[petIndex]=petRarity;mutationMap[petIndex]=petMutation;
+ localStorage.setItem('eterniaPetRarityMap',JSON.stringify(rarityMap));
+ localStorage.setItem('eterniaPetMutationMap',JSON.stringify(mutationMap));
+ petIndex=(petIndex+1)%petCatalog.length;
+ // Each companion species has its own saved rarity/mutation slot.
+ if(rarityMap[petIndex]===undefined){let roll=Math.random()*100,total=0;petRarity=0;for(let i=0;i<petRarityWeights.length;i++){total+=petRarityWeights[i];if(roll<=total){petRarity=i;break;}}rarityMap[petIndex]=petRarity;}
+ else petRarity=rarityMap[petIndex];
+ petMutation=mutationMap[petIndex]===undefined?-1:mutationMap[petIndex];
+ localStorage.setItem('eterniaPetRarityMap',JSON.stringify(rarityMap));
+ scene.remove(activePet);activePet=makePetModel(petCatalog[petIndex]);scene.add(activePet);
+ persistCompanion();refreshCompanionUI();feed(`${petCatalog[petIndex].name} yoldaşın oldu: ${petRarities[petRarity]}! Onunla savaşarak yetiştir.`);
+}
+function feedPet(){
+ if(crystalCount<5){feed('Evcil hayvanını beslemek için 5 kristal gerekiyor.');return;}
+ crystalCount-=5;petXP+=30;petBond=Math.min(100,petBond+10);
+ while(petXP>=petLevel*100){petXP-=petLevel*100;petLevel++;feed(`Evcil hayvanın ${petLevel}. seviyeye ulaştı! Savaş gücü arttı.`);}
+ saveProgress();persistCompanion();refreshCompanionUI();
+}
+function mutatePet(){
+ if(petMutation>=0){feed('Bu evcil hayvan zaten mutasyon geçirdi. Her yoldaş bir kez mutasyona uğrayabilir.');return;}
+ if(mutationCores<1||crystalCount<10){feed('Mutasyon için 1 Mutasyon Özü ve 10 kristal gerekiyor. Özleri bosslardan kazanabilirsin.');return;}
+ crystalCount-=10;mutationCores--;
+ petMutation=Math.floor(Math.random()*petMutations.length);
+ const mutationMap=JSON.parse(localStorage.getItem('eterniaPetMutationMap')||'{}');mutationMap[petIndex]=petMutation;localStorage.setItem('eterniaPetMutationMap',JSON.stringify(mutationMap));
+ scene.remove(activePet);activePet=makePetModel(petCatalog[petIndex]);scene.add(activePet);
+ feed(`${petCatalog[petIndex].name} mutasyon geçirdi: ${petMutations[petMutation].name}! ${petMutations[petMutation].desc}.`);
+ saveProgress();persistCompanion();refreshCompanionUI();
+}
+function cycleMount(){
+ mountIndex=(mountIndex+1)%mountCatalog.length;
+ scene.remove(activeMount);activeMount=makeMountModel(mountCatalog[mountIndex]);activeMount.visible=mounted;scene.add(activeMount);
+ persistCompanion();refreshCompanionUI();feed(`${mountCatalog[mountIndex].name} bineğini seçtin.`);
+}
+function toggleMount(){
+ mounted=!mounted;
+ if(mounted){feed(`${mountCatalog[mountIndex].name} bineğine bindin. Hareket hızın arttı.`);}
+ else feed('Bineğinden indin.');
+ persistCompanion();refreshCompanionUI();
+}
+$('petCycle').addEventListener('click',switchPet);
+$('petFeed').addEventListener('click',feedPet);
+$('petMutate').addEventListener('click',mutatePet);
+$('mountCycle').addEventListener('click',cycleMount);
+$('mountToggle').addEventListener('click',toggleMount);
+function petGainXP(amount){
+ petXP+=amount;petBond=Math.min(100,petBond+1);
+ while(petXP>=petLevel*100){petXP-=petLevel*100;petLevel++;feed(`Yoldaşın ${petLevel}. seviyeye yükseldi!`);}
+ persistCompanion();refreshCompanionUI();
+}
+function commandPetAttack(){
+ if(!joined)return;
+ const target=nearestEnemy(18);
+ if(!target){feed('Yoldaşına hedef göstermek için 18 metre içinde bir yaratık olmalı.');return;}
+ petCommandTarget=target;
+ feed(`Yoldaşına hedef gösterdin: ${target.name}!`);
+}
+function companionCombat(dt){
+ if(!joined)return;
+ // Companion follows the player and automatically attacks nearby enemies.
+ const back=new THREE.Vector3(Math.sin(yaw+1.0)*2.1,0,Math.cos(yaw+1.0)*2.1);
+ const petTarget=player.position.clone().add(back);
+ activePet.position.lerp(new THREE.Vector3(petTarget.x,heightAt(petTarget.x,petTarget.z),petTarget.z),Math.min(1,dt*4));
+ activePet.rotation.y=Math.atan2(player.position.x-activePet.position.x,player.position.z-activePet.position.z);
+ petAttackTimer=Math.max(0,petAttackTimer-dt);
+ if(petAttackTimer<=0){
+  const e=(petCommandTarget&&!petCommandTarget.dead)?petCommandTarget:nearestEnemy(8);
+  if(e){petAttackTimer=3.2;spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.5,e.z),0x75dfff,.7);const damage=Math.round((petCatalog[petIndex].damage+petLevel*2)*petRarityBonus[petRarity]*(petMutation>=0?petMutations[petMutation].bonus:1));e.hp-=damage;reportEnemyDamage(e,damage);if(e.boss&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));feed(`${petCatalog[petIndex].name} saldırdı: ${damage} hasar!`);
+   if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;if(petCommandTarget===e)petCommandTarget=null;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yoldaşınla birlikte yenildi!`);
+    if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));if(bossDown.warden&&bossDown.witch)openVillageChoice();}
+    
+   }
+  }
+ }
+}
+document.addEventListener('keydown',e=>{if(e.code==='KeyM'&&joined)toggleMount();if(e.code==='KeyP'&&joined)commandPetAttack();});
+refreshCompanionUI();
+
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.04);
+ if(joined)playerMana=Math.min(maxMana,playerMana+dt*1.2);
+ for(let i=combatEffects.length-1;i>=0;i--){const fx=combatEffects[i];fx.life-=dt;const t=1-fx.life/fx.max;fx.mesh.scale.setScalar(1+t*2.5);fx.mesh.material.opacity=Math.max(0,1-t);fx.mesh.position.y+=dt*1.2;fx.light.intensity=Math.max(0,2.2*(1-t));if(fx.life<=0){scene.remove(fx.mesh);scene.remove(fx.light);combatEffects.splice(i,1);}}
+ for(const c of lootChests){c.mesh.rotation.y=Math.sin(performance.now()*.001+c.x)*.07;c.mesh.position.y=heightAt(c.x,c.z)+.15+Math.sin(performance.now()*.002+c.z)*.08;}
+ updateVitals();
+ for(const c of crystals){if(c.visible){c.rotation.y+=dt*.8;c.position.y=c.userData.baseY+Math.sin(performance.now()*.0015+c.position.x)*.18;}}
+ if(joined){
+  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  let move=new THREE.Vector3();
+  if(keys.KeyW||keys.ArrowUp)move.add(forward);
+  if(keys.KeyS||keys.ArrowDown)move.sub(forward);
+  if(keys.KeyD||keys.ArrowRight)move.add(right);
+  if(keys.KeyA||keys.ArrowLeft)move.sub(right);
+  if(move.lengthSq()>0){move.normalize();player.position.addScaledVector(move,(mounted?8*mountCatalog[mountIndex].speed:8)*dt);player.rotation.y=Math.atan2(move.x,move.z);}
+  if(keys.Space&&onGround&&!mounted){velocityY=7.2;onGround=false;}
+  velocityY-=18*dt;player.position.y+=velocityY*dt;
+  const floor=heightAt(player.position.x,player.position.z);
+  if(player.position.y<floor+(mounted?1.05:0)){player.position.y=floor+(mounted?1.05:0);velocityY=0;onGround=true;}
+  player.position.x=Math.max(-112,Math.min(112,player.position.x));player.position.z=Math.max(-112,Math.min(112,player.position.z));
+  const target=new THREE.Vector3(player.position.x,player.position.y+2.4,player.position.z);
+  const offset=new THREE.Vector3(Math.sin(yaw)*7,3.2+pitch*4,Math.cos(yaw)*7);
+  camera.position.lerp(target.clone().add(offset),1-Math.pow(.001,dt));camera.lookAt(target);
+  if(ws&&ws.readyState===1&&Math.floor(performance.now()/100)%2===0){ws.send(JSON.stringify({type:'move',x:player.position.x,y:player.position.y,z:player.position.z,rotation:player.rotation.y}));}
+ }else{camera.position.set(0,12,18);camera.lookAt(0,0,0);}
+ if(mounted){
+  activeMount.visible=true;
+  activeMount.position.set(player.position.x,heightAt(player.position.x,player.position.z),player.position.z);
+  activeMount.rotation.y=player.rotation.y;
+ }else{activeMount.visible=false;}
+ companionCombat(dt);
+ renderer.render(scene,camera);
+}
+refreshPanel();updateStats();refreshCompanionUI();updateVitals();renderSkillBar();
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>
