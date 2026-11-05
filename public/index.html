@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Legends of Eternia</title>
+<title>Legends of Eternia — Kadim Çin Köyü</title>
 <style>
   *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#09111d;color:#fff;font-family:system-ui,Segoe UI,sans-serif}
   #game{display:block;width:100%;height:100%}
@@ -14,6 +14,11 @@
   #stats{font-size:13px;color:#e6f5ff;margin-top:4px}
   #help{position:absolute;left:16px;bottom:16px;font-size:12px;line-height:1.7;color:#d6e7f6}
   #notice{position:absolute;right:16px;top:16px;max-width:260px;font-size:12px;color:#d6e7f6}
+  #minimapWrap{position:absolute;right:16px;top:16px;width:176px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:2}
+  #minimapTitle{font-size:10px;font-weight:800;letter-spacing:.08em;color:#d8f1ff;text-shadow:0 1px 4px #000}
+  #miniMap{width:164px;height:164px;border:2px solid rgba(174,225,255,.85);border-radius:50%;background:rgba(5,14,25,.78);box-shadow:0 4px 18px #0008}
+  @media(max-width:760px){#minimapWrap{right:8px;top:8px;width:126px}#miniMap{width:116px;height:116px}#minimapTitle{font-size:9px}}
+
   #crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#d9f7ff;box-shadow:0 0 10px #7bdcff;transform:translate(-50%,-50%);opacity:.6}
   #start{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(22,57,86,.55),rgba(3,9,18,.94));z-index:5}
   #startCard{width:min(92vw,440px);padding:30px;background:rgba(8,18,34,.92);border:1px solid rgba(151,218,255,.35);border-radius:20px;text-align:center;box-shadow:0 20px 80px #0009}
@@ -51,6 +56,30 @@
   @media(max-width:760px){#skillbar{gap:3px;max-width:96vw;flex-wrap:wrap;justify-content:center}.skill-slot{width:40px;height:42px}#vitals{bottom:120px}}
   @media(max-width:760px){#helpButton{left:8px;top:48%;padding:10px 12px;font-size:12px}}
   @media(max-width:600px){#gamepanel{width:46vw;max-height:40vh;right:8px;bottom:8px}#feed{left:8px;top:100px;width:45vw}}
+
+  /* Kadim Çin köyü teması */
+  html,body{background:#101a19;color:#f8edda}
+  .panel{background:linear-gradient(145deg,rgba(44,30,25,.91),rgba(16,35,34,.91));border:1px solid rgba(224,179,91,.58);box-shadow:0 7px 24px rgba(16,8,4,.35);backdrop-filter:blur(7px)}
+  #brand{color:#f3d28a;text-shadow:0 1px 5px #5d1d18}
+  #stats,#minimapTitle{color:#f8e5b5}
+  #miniMap{border-color:#d9b56d;background:rgba(23,39,34,.9);box-shadow:0 4px 18px #130c08aa}
+  #helpButton{border-color:#d6a65a;background:linear-gradient(145deg,#8d2f25,#4c201b);color:#ffedc5;box-shadow:0 6px 22px #0009}
+  #helpButton:hover{background:linear-gradient(145deg,#a94030,#663024)}
+  button{background:linear-gradient(100deg,#c34a32,#e0ad54);color:#29150e}
+  #gamepanel h3{color:#f1c875}
+  #gamepanel .small{color:#e2cda7}
+  #start{background:radial-gradient(ellipse at center,rgba(99,48,30,.60),rgba(10,22,20,.97))}
+  #startCard,.modal .card{background:linear-gradient(145deg,rgba(53,31,26,.97),rgba(16,39,35,.97));border:1px solid #c99a52}
+  h1,.modal h2{color:#f2d18a}
+  #startCard p,.modal p{color:#ead9bb}
+  input{background:#172d29;border-color:#a47a45;color:#fff1d1}
+  .choicegrid button{background:linear-gradient(145deg,#713027,#25483d);color:#ffedce;border-color:#c99a52}
+  .choicegrid button:hover{background:linear-gradient(145deg,#963c2c,#37604b)}
+  #vitals{background:linear-gradient(145deg,rgba(49,29,25,.92),rgba(19,43,39,.92))}
+  .skill-slot{background:linear-gradient(145deg,#6e3428,#24443b);border-color:#d2a75e;color:#fff0ce}
+  #skillbar button{background:linear-gradient(100deg,#c64d35,#e0b35c)}
+  .feedline{background:#241914dd;border-left-color:#d5a34f}
+
 </style>
 </head>
 <body>
@@ -58,9 +87,13 @@
 <div id="hud">
   <div id="top">
     <div class="panel">
-      <div id="brand">LEGENDS OF ETERNIA</div>
+      <div id="brand">LEGENDS OF ETERNIA · YEŞİM VADİSİ</div>
       <div id="stats">Seviye 1 · XP 0 · Kristal 0</div>
     </div>
+  </div>
+  <div id="minimapWrap" aria-label="Başlangıç Köyü mini haritası">
+    <div id="minimapTitle">YEŞİM VADİSİ</div>
+    <canvas id="miniMap" width="220" height="220"></canvas>
   </div>
   <button id="helpButton" type="button">YARDIM</button>
 
@@ -77,7 +110,7 @@
   <div id="crosshair"></div>
   <div id="feed"></div>
   <div id="gamepanel" class="panel">
-    <h3>MACERACI DEFTERİ</h3>
+    <h3>KÖY GÜNLÜĞÜ</h3>
     <div id="region">Bölge: Başlangıç Köyü</div>
     <div id="classline">Sınıf: Henüz seçilmedi</div>
     <div id="walletline" class="small">Cüzdan: 0 altın · 0 gümüş · 0 bakır</div>
@@ -111,7 +144,7 @@
     <div id="connection">Sunucu bağlantısı kontrol ediliyor…</div>
   </div>
 </div>
-<div id="classModal" class="modal"><div class="card"><h2>10. Seviye — Sınıfını Seç</h2><p>Bir sınıf seç. Bu sınıfın ilk seçimini yapan oyuncuya özel bir beceri verilir; sonraki seçimlerde normal bir beceri kazanılır.</p><div class="choicegrid" id="classChoices"></div></div></div>
+<div id="classModal" class="modal"><div class="card"><h2>10. Seviye — Yolunu Seç</h2><p>Bir sınıf seç. Bu sınıfın ilk seçimini yapan oyuncuya özel bir beceri verilir; sonraki seçimlerde normal bir beceri kazanılır.</p><div class="choicegrid" id="classChoices"></div></div></div>
 <div id="villageModal" class="modal"><div class="card"><h2>Ana Köyünü Seç</h2><p>İki başlangıç bossu yenildi. Artık beş ana köyden birini seçebilirsin. Seçimin kalıcıdır.</p><div class="choicegrid" id="villageChoices"></div></div></div>
 <div id="eventModal" class="modal"><div class="card"><h2 id="eventTitle">Yeni meydan okuma açıldı!</h2><p id="eventDesc"></p><button id="eventClose">Dünyaya dön</button></div></div>
 <div id="bestiaryModal" class="modal"><div class="card"><h2>Yaratık Rehberi</h2><p>Yalnızca 1–10. seviye yaratıkların bilgileri gösterilir. 11. seviye ve üzerindeki yaratıkların bilgileri gizlidir.</p><div id="bestiaryContent"></div><button id="bestiaryClose">Kapat</button></div></div>
@@ -141,24 +174,77 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x91c9e8);
-scene.fog = new THREE.Fog(0x91c9e8, 45, 155);
+scene.background = new THREE.Color(0xb8c9c4);
+scene.fog = new THREE.Fog(0xb8c9c4, 55, 165);
 const camera = new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300);
-const hemi = new THREE.HemisphereLight(0xd9f2ff,0x53654a,2.25); scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffedcf,2.6); sun.position.set(-35,55,25); sun.castShadow=true; sun.shadow.mapSize.set(4096,4096); scene.add(sun);
+const hemi = new THREE.HemisphereLight(0xf7e5d1,0x59634b,2.15); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd99b,2.45); sun.position.set(-35,55,25); sun.castShadow=true; sun.shadow.mapSize.set(4096,4096); scene.add(sun);
 
 const mat = (color,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
-const groundMat=mat(0x477b55), trunkMat=mat(0x5a3e2c), leafMat=mat(0x245b4a), rockMat=mat(0x718493), goldMat=new THREE.MeshStandardMaterial({color:0x70eaff,emissive:0x1685bb,emissiveIntensity:1.7,metalness:.35,roughness:.25});
+const groundMat=mat(0x66866a), trunkMat=mat(0x60402d), leafMat=mat(0x477b50), rockMat=mat(0x9b9587), goldMat=new THREE.MeshStandardMaterial({color:0xe6bd62,emissive:0x9a4c20,emissiveIntensity:.7,metalness:.35,roughness:.3});
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(240,240,48,48),groundMat); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
 
 function heightAt(x,z){ return Math.sin(x*.055)*1.2 + Math.cos(z*.06)*.9 + Math.sin((x+z)*.035)*1.1; }
 function makeTree(x,z,s=1){
  const y=heightAt(x,z);
- const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.34*s,2.3*s,7),trunkMat); trunk.position.set(x,y+1.1*s,z); trunk.castShadow=true; scene.add(trunk);
- const crown=new THREE.Mesh(new THREE.ConeGeometry(1.35*s,3.3*s,7),leafMat); crown.position.set(x,y+3*s,z); crown.castShadow=true; scene.add(crown);
+ if(Math.random()<.58){
+  // Çin bambu kümeleri: ince gövdeler, boğum halkaları ve yaprak püskülleri.
+  for(let k=0;k<4;k++){
+   const ox=(Math.random()-.5)*1.15*s,oz=(Math.random()-.5)*1.15*s,h=(5.2+Math.random()*2.1)*s;
+   const culm=new THREE.Mesh(new THREE.CylinderGeometry(.075*s,.11*s,h,7),mat(0x477b50));culm.position.set(x+ox,y+h/2,z+oz);culm.castShadow=true;scene.add(culm);
+   for(let n=1;n<5;n++){const band=new THREE.Mesh(new THREE.TorusGeometry(.082*s,.018*s,4,8),mat(0x9dbb70));band.rotation.x=Math.PI/2;band.position.set(x+ox,y+h*n/5,z+oz);scene.add(band);}
+   for(let q=0;q<3;q++){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.16*s,1.25*s,5),mat(q%2?0x477b50:0x71985a));leaf.position.set(x+ox+(Math.random()-.5)*.55*s,y+h*.72+q*.12*s,z+oz);leaf.rotation.z=(Math.random()-.5)*1.6;leaf.rotation.x=(Math.random()-.5)*1.2;scene.add(leaf);}
+  }
+ }else{
+  // Erik / kiraz çiçeği ağaçları.
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.32*s,3.6*s,7),mat(0x60402d));trunk.position.set(x,y+1.8*s,z);trunk.castShadow=true;scene.add(trunk);
+  for(let b=0;b<4;b++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.07*s,.13*s,1.9*s,6),mat(0x60402d));branch.position.set(x+(b-1.5)*.48*s,y+3.15*s,z+(b%2?-.35:.35)*s);branch.rotation.z=(b-1.5)*.28;branch.rotation.x=(b%2?-.35:.35);scene.add(branch);}
+  const blossom=mat(0xf0a9b8,.9);for(let b=0;b<9;b++){const petal=new THREE.Mesh(new THREE.IcosahedronGeometry((.55+Math.random()*.35)*s,1),blossom);petal.position.set(x+(Math.random()-.5)*2.5*s,y+(3.5+Math.random()*1.5)*s,z+(Math.random()-.5)*2.5*s);petal.castShadow=true;scene.add(petal);}
+ }
 }
-for(let i=0;i<115;i++){let a=Math.random()*Math.PI*2,r=12+Math.random()*95,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x)<9&&Math.abs(z)<9)continue;makeTree(x,z,.65+Math.random()*.8);}
+for(let i=0;i<82;i++){let a=Math.random()*Math.PI*2,r=17+Math.random()*88,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x)<13&&Math.abs(z)<13)continue;makeTree(x,z,.68+Math.random()*.75);}
 for(let i=0;i<24;i++){let x=(Math.random()-.5)*180,z=(Math.random()-.5)*180;let m=new THREE.Mesh(new THREE.DodecahedronGeometry(2+Math.random()*5,0),rockMat);m.position.set(x,heightAt(x,z)+1,z);m.scale.y=.8;m.castShadow=true;scene.add(m);}
+
+// Kadim Çin köyü mimarisi: ahşap evler, katlı pagodalar, fenerler ve lotus göleti.
+const roofMat=mat(0x263e3b),wallMat=mat(0xd8c39a),redWood=mat(0x8c3328),goldTrim=mat(0xd5a64f),darkWood=mat(0x573629);
+function makeChineseLantern(x,y,z,s=1){
+ const g=new THREE.Group();const red=mat(0xb9362d),gold=mat(0xe5bd62);
+ const body=new THREE.Mesh(new THREE.SphereGeometry(.38*s,8,7),red);body.scale.y=1.25;g.add(body);
+ const cap=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.28*s,.12*s,8),gold);cap.position.y=.48*s;g.add(cap);
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(.28*s,.22*s,.12*s,8),gold);base.position.y=-.48*s;g.add(base);
+ const tassel=new THREE.Mesh(new THREE.CylinderGeometry(.025*s,.018*s,.45*s,5),gold);tassel.position.y=-.76*s;g.add(tassel);
+ g.position.set(x,y,z);scene.add(g);const light=new THREE.PointLight(0xff7547,.8,8*s);light.position.set(x,y,z);scene.add(light);
+}
+function makePagoda(x,z,s=1,tiers=2){
+ const g=new THREE.Group();
+ const base=new THREE.Mesh(new THREE.BoxGeometry(8*s,.65*s,7*s),mat(0x9b9587));base.position.y=.32*s;g.add(base);
+ const room=new THREE.Mesh(new THREE.BoxGeometry(6.1*s,3.1*s,5.2*s),wallMat);room.position.y=2.15*s;g.add(room);
+ for(const px of [-2.8,2.8])for(const pz of [-2.35,2.35]){const col=new THREE.Mesh(new THREE.CylinderGeometry(.2*s,.24*s,3.25*s,8),redWood);col.position.set(px*s,2.05*s,pz*s);g.add(col);}
+ const door=new THREE.Mesh(new THREE.BoxGeometry(1.25*s,2.25*s,.12*s),darkWood);door.position.set(0,1.5*s,2.67*s);g.add(door);
+ for(let i=0;i<tiers;i++){
+  const yy=(3.9+i*1.8)*s, radius=(5.6-i*.8)*s;
+  const roof=new THREE.Mesh(new THREE.CylinderGeometry(radius*.78,radius,.62*s,4,1),roofMat);roof.rotation.y=Math.PI/4;roof.position.y=yy;roof.castShadow=true;g.add(roof);
+  const ridge=new THREE.Mesh(new THREE.CylinderGeometry(.12*s,.2*s,.35*s,6),goldTrim);ridge.position.y=yy+.42*s;g.add(ridge);
+  for(let k=0;k<4;k++){const fin=new THREE.Mesh(new THREE.ConeGeometry(.22*s,.8*s,5),roofMat);const a=k*Math.PI/2+Math.PI/4;fin.position.set(Math.cos(a)*radius*.68,yy+.32*s,Math.sin(a)*radius*.68);fin.rotation.z=-Math.cos(a)*.55;fin.rotation.x=Math.sin(a)*.55;g.add(fin);}
+ }
+ const finial=new THREE.Mesh(new THREE.SphereGeometry(.28*s,8,6),goldTrim);finial.position.y=(4+tiers*1.8)*s;g.add(finial);
+ g.position.set(x,heightAt(x,z),z);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});scene.add(g);
+ makeChineseLantern(x-3.5*s,heightAt(x,z)+2.7*s,z+3.5*s,.8*s);makeChineseLantern(x+3.5*s,heightAt(x,z)+2.7*s,z+3.5*s,.8*s);
+}
+function makeVillageGate(x,z){
+ const g=new THREE.Group();for(const px of [-5,5]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.8,5,.8),redWood);pillar.position.set(px,2.5,0);g.add(pillar);const foot=new THREE.Mesh(new THREE.BoxGeometry(1.25,.55,1.25),mat(0x928a79));foot.position.set(px,.28,0);g.add(foot);}
+ const beam=new THREE.Mesh(new THREE.BoxGeometry(12,.65,1.1),darkWood);beam.position.y=4.6;g.add(beam);
+ const roof=new THREE.Mesh(new THREE.CylinderGeometry(4.8,5.8,.8,4),roofMat);roof.rotation.y=Math.PI/4;roof.position.y=5.15;g.add(roof);
+ const plaque=new THREE.Mesh(new THREE.BoxGeometry(3.5,1,.18),goldTrim);plaque.position.set(0,4.15,.62);g.add(plaque);
+ g.position.set(x,heightAt(x,z),z);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});scene.add(g);
+ makeChineseLantern(x-4.9,heightAt(x,z)+3.6,z+1,.9);makeChineseLantern(x+4.9,heightAt(x,z)+3.6,z+1,.9);
+}
+makePagoda(0,-27,1.15,3);makePagoda(-24,2,.78,2);makePagoda(24,3,.78,2);makePagoda(-18,-25,.62,2);makePagoda(19,-26,.62,2);
+makeVillageGate(0,-13);
+// Lotus pond with stepping stones beside the central square.
+const pond=new THREE.Mesh(new THREE.CylinderGeometry(8.5,8.5,.22,32),mat(0x4d8c88,.25,.15));pond.position.set(19,heightAt(19,-10)+.08,-10);scene.add(pond);
+for(let i=0;i<9;i++){const a=i*Math.PI*2/9;const lotus=new THREE.Mesh(new THREE.CircleGeometry(.65,7),mat(0x4f9b67));lotus.rotation.x=-Math.PI/2;lotus.position.set(19+Math.cos(a)*5,heightAt(19+Math.cos(a)*5,-10+Math.sin(a)*5)+.22,-10+Math.sin(a)*5);scene.add(lotus);}
+for(let i=0;i<14;i++){const x=(Math.random()-.5)*50,z=(Math.random()-.5)*50;if(Math.hypot(x,z)>11)makeChineseLantern(x,heightAt(x,z)+2.8,z,.62);}
 
 const crystals=[];
 for(let i=0;i<22;i++){
@@ -169,18 +255,62 @@ for(let i=0;i<22;i++){
 const pathMat=mat(0xb7a57c);
 const path=new THREE.Mesh(new THREE.RingGeometry(7.5,9,64),pathMat);path.rotation.x=-Math.PI/2;path.position.y=.04;scene.add(path);
 
-// Player avatar: stylized low-poly adventurer
-function createAvatar(color=0x3c8edb){
+// Eski Çin hanfu / zırh estetiğinde sınıfa özel, stilize karakter modelleri.
+function createAvatar(color=0x3c8edb,className=''){
  const g=new THREE.Group();
- const body=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.85,4,8),mat(color,.65));body.position.y=1.25;body.castShadow=true;g.add(body);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.36,12,10),mat(0xf0c6a3));head.position.y=2.12;head.castShadow=true;g.add(head);
- const hair=new THREE.Mesh(new THREE.SphereGeometry(.38,10,7,0,Math.PI*2,0,Math.PI*.55),mat(0x29283b));hair.position.set(0,2.23,-.04);g.add(hair);
- const cape=new THREE.Mesh(new THREE.ConeGeometry(.48,1.15,5),mat(0x793d9c));cape.position.set(0,1.25,-.43);cape.rotation.x=-.15;g.add(cape);
- const legMat=mat(0x25354d);
- for(const x of [-.22,.22]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.14,.17,.65,7),legMat);leg.position.set(x,.38,0);leg.castShadow=true;g.add(leg);}
- return g;
+ const looks={
+  'Okçu':{robe:0x477451,trim:0xd8bd78,hair:0x24252a,accent:0x9cbd79},
+  'Suikastçi':{robe:0x292d35,trim:0x8b3430,hair:0x171a22,accent:0x6b4c70},
+  'Tank':{robe:0x526b62,trim:0xd5a64f,hair:0x28231e,accent:0x9b7444},
+  'Büyücü':{robe:0x51427b,trim:0xe0c477,hair:0x26223b,accent:0x9a8bd4},
+  'Rahip':{robe:0xe1d4b4,trim:0xc49b4f,hair:0x39302a,accent:0x9e4938}
+ };
+ const look=looks[className]||{robe:color,trim:0xd5b16c,hair:0x29283b,accent:0x9e4938};
+ const cloth=mat(look.robe,.82),trim=mat(look.trim,.65),skin=mat(0xe6bd9c),hair=mat(look.hair),accent=mat(look.accent);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.43,.76,4,8),cloth);torso.position.y=1.25;torso.castShadow=true;g.add(torso);
+ const robeSkirt=new THREE.Mesh(new THREE.CylinderGeometry(.34,.66,.72,8),cloth);robeSkirt.position.y=.72;g.add(robeSkirt);
+ const sash=new THREE.Mesh(new THREE.TorusGeometry(.43,.075,6,12),trim);sash.rotation.x=Math.PI/2;sash.position.y=.98;g.add(sash);
+ // Hanfu çapraz yaka ve geniş kol silueti.
+ const collar=new THREE.Mesh(new THREE.BoxGeometry(.24,.62,.12),trim);collar.position.set(.12,1.63,.35);collar.rotation.z=-.48;g.add(collar);
+ for(const x of [-.48,.48]){const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.16,.23,.68,7),cloth);sleeve.position.set(x,1.43,0);sleeve.rotation.z=x*.7;g.add(sleeve);}
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.34,12,10),skin);head.position.y=2.12;head.castShadow=true;g.add(head);
+ const cap=new THREE.Mesh(new THREE.SphereGeometry(.37,10,7,0,Math.PI*2,0,Math.PI*.58),hair);cap.position.set(0,2.25,-.04);g.add(cap);
+ const bun=new THREE.Mesh(new THREE.SphereGeometry(.16,8,7),hair);bun.position.set(0,2.55,-.08);g.add(bun);
+ for(const x of [-.2,.2]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.58,7),mat(0x302b2a));leg.position.set(x,.3,0);g.add(leg);}
+ // Sınıfa özgü, kültürel kostüm ayrıntıları; işlevsel silah veya saldırı ekipmanı içermez.
+ if(className==='Okçu'){
+  const hat=new THREE.Mesh(new THREE.ConeGeometry(.43,.34,8),accent);hat.position.y=2.48;g.add(hat);
+  const quiver=new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,.85,7),trim);quiver.position.set(.42,1.48,-.38);quiver.rotation.z=-.18;g.add(quiver);
+  for(let i=0;i<3;i++){const feather=new THREE.Mesh(new THREE.ConeGeometry(.09,.55,5),mat(0xd8d0a2));feather.position.set(.42+(i-1)*.11,1.98,-.38);feather.rotation.z=(i-1)*.2;g.add(feather);}
+ }else if(className==='Suikastçi'){
+  const hood=new THREE.Mesh(new THREE.ConeGeometry(.48,.62,7),hair);hood.position.set(0,2.38,-.04);g.add(hood);
+  const mask=new THREE.Mesh(new THREE.BoxGeometry(.48,.2,.12),accent);mask.position.set(0,1.98,.31);g.add(mask);
+  const scarf=new THREE.Mesh(new THREE.BoxGeometry(.9,.16,.18),cloth);scarf.position.set(0,1.78,-.42);scarf.rotation.x=-.25;g.add(scarf);
+ }else if(className==='Tank'){
+  for(const x of [-.48,.48]){const pauldron=new THREE.Mesh(new THREE.SphereGeometry(.32,8,6),trim);pauldron.scale.set(1,.72,1);pauldron.position.set(x,1.72,0);g.add(pauldron);}
+  const chestPlate=new THREE.Mesh(new THREE.BoxGeometry(.72,.65,.16),accent);chestPlate.position.set(0,1.35,.38);g.add(chestPlate);
+  const crest=new THREE.Mesh(new THREE.ConeGeometry(.16,.42,5),trim);crest.position.set(0,2.62,-.02);g.add(crest);
+ }else if(className==='Büyücü'){
+  const hat=new THREE.Mesh(new THREE.ConeGeometry(.48,.85,6),accent);hat.position.y=2.7;g.add(hat);
+  const hatBrim=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.09,8),trim);hatBrim.position.y=2.34;g.add(hatBrim);
+  for(const x of [-.57,.57]){const sleeveEnd=new THREE.Mesh(new THREE.SphereGeometry(.19,7,6),trim);sleeveEnd.position.set(x,1.18,.02);g.add(sleeveEnd);}
+  const talisman=new THREE.Mesh(new THREE.BoxGeometry(.22,.42,.035),mat(0xe6c879));talisman.position.set(0,1.72,.48);g.add(talisman);
+ }else if(className==='Rahip'){
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(.48,.045,6,24),trim);halo.position.set(0,2.5,-.12);g.add(halo);
+  for(let i=0;i<7;i++){const bead=new THREE.Mesh(new THREE.SphereGeometry(.055,6,5),accent);const a=i/7*Math.PI*2;bead.position.set(Math.cos(a)*.43,1.18+Math.sin(a)*.16,.34);g.add(bead);}
+  const shoulderCape=new THREE.Mesh(new THREE.ConeGeometry(.58,.8,5),trim);shoulderCape.position.set(0,1.52,-.32);shoulderCape.rotation.x=-.2;g.add(shoulderCape);
+ }
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}});
+ g.userData.className=className;return g;
 }
-const player=createAvatar();scene.add(player);
+function restyleAvatar(target,className,color=0x3c8edb){
+ const fresh=createAvatar(color,className);
+ while(target.children.length)target.remove(target.children[0]);
+ while(fresh.children.length)target.add(fresh.children[0]);
+ target.userData.className=className||'';
+}
+const savedVisualClass=localStorage.getItem('eterniaClass')==='Savaşçı'?'Büyücü':(localStorage.getItem('eterniaClass')||'');
+const player=createAvatar(0x3c8edb,savedVisualClass);scene.add(player);
 let myId=null, ws=null, joined=false, xp=0, crystalCount=0, level=1;
 let copperCoins=Math.max(0,Number(localStorage.getItem('eterniaCopperCoins')||0));
 const others=new Map();
@@ -194,6 +324,7 @@ const clock=new THREE.Clock();
 // Shared game state must exist before WebSocket callbacks and UI handlers can access it.
 let currentRegion='Başlangıç Köyü';
 let bosses={warden:1000,witch:1250}, bossDown={warden:false,witch:false};
+let bossSpawnPositions={warden:{x:25,z:4},witch:{x:-27,z:-4}};
 let classFirst={}, lastMilestone=0;
 let playerHP=100, maxHP=100, attackCooldown=0, skillCooldown=0, deathCooldown=0;
 let lootChests=[], combatEffects=[], pendingLoot=null;
@@ -219,6 +350,13 @@ function connect(){
    if(msg.type==='welcome'){
     myId=msg.id;
     if(msg.bosses){bosses=msg.bosses;bossDown={warden:bosses.warden<=0,witch:bosses.witch<=0};for(const [key,boss] of Object.entries(bossMeshes)){if(boss){boss.hp=bosses[key];if(boss.hp<=0){boss.dead=true;boss.mesh.visible=false;}}}}
+    if(msg.bossPositions){
+     bossSpawnPositions=msg.bossPositions;
+     for(const [key,boss] of Object.entries(bossMeshes)){
+      const p=bossSpawnPositions[key];
+      if(boss&&p){boss.x=p.x;boss.z=p.z;boss.mesh.position.set(p.x,heightAt(p.x,p.z),p.z);}
+     }
+    }
     if(msg.classFirst)classFirst=msg.classFirst;
     (msg.deadEnemies||[]).forEach(id=>{const e=enemies.find(x=>x.id===id);if(e){e.dead=true;e.mesh.visible=false;}});
     (msg.chests||[]).forEach(ch=>createLootChest(ch,false));
@@ -233,11 +371,19 @@ function connect(){
     if(msg.playerId===myId&&msg.contents){showLootContents(msg.contents);}
    }
    if(msg.type==='state'){
-    for(const p of msg.players){if(p.id===myId)continue;let o=others.get(p.id);if(!o){o=createAvatar(p.color);scene.add(o);others.set(p.id,o);}o.position.set(p.x,p.y,p.z);o.rotation.y=p.rotation||0;}
+    for(const p of msg.players){if(p.id===myId)continue;let o=others.get(p.id);if(!o){o=createAvatar(p.color,p.className||'');scene.add(o);others.set(p.id,o);}if(o.userData.className!==(p.className||''))restyleAvatar(o,p.className||'',p.color);o.position.set(p.x,p.y,p.z);o.rotation.y=p.rotation||0;}
     for(const [id,o] of others){if(!msg.players.some(p=>p.id===id)){scene.remove(o);others.delete(id);}}
    }
    if(msg.type==='leave'){const o=others.get(msg.id);if(o){scene.remove(o);others.delete(msg.id);}}
    if(msg.type==='bossUpdate'){bosses=msg.bosses;bossDown={warden:bosses.warden<=0,witch:bosses.witch<=0};const b=bossMeshes[msg.boss];if(b){b.hp=bosses[msg.boss];if(b.hp<=0){b.dead=true;b.mesh.visible=false;}}refreshPanel();if(bossDown.warden&&bossDown.witch&&!chosenVillage)openVillageChoice();}
+    if(msg.type==='bossRespawn'){
+     bosses=msg.bosses||bosses;
+     const b=bossMeshes[msg.boss];
+     if(b){b.x=msg.x;b.z=msg.z;b.hp=msg.hp||b.maxHp;b.dead=false;b.mesh.position.set(b.x,heightAt(b.x,b.z),b.z);b.mesh.visible=true;}
+     bossSpawnPositions[msg.boss]={x:msg.x,z:msg.z};
+     feed(`${b?.name||'Boss'} haritanın başka bir noktasında yeniden belirdi!`);
+     refreshPanel();
+    }
    if(msg.type==='classFirst'){classFirst=msg.classes||{};}
   };
  }catch(e){connection.textContent='Tek oyunculu mod';}
@@ -263,10 +409,10 @@ function collectNearby(){
 const $ = id => document.getElementById(id);
 const feed = (msg) => { const el=document.createElement('div');el.className='feedline';el.textContent=msg;$('feed').prepend(el);while($('feed').children.length>5)$('feed').lastChild.remove(); };
 const classData = {
-  'Savaşçı': {role:'Yakın dövüş / hasar',skills:['Kasırga Darbesi','Kırılmaz İrade','Çelik Fırtına'],special:'Ejder Keseni'},
+  'Büyücü': {role:'Kadim tılsımlar / büyü desteği',skills:['Yeşim Alevi','Sis Perdesi','Yıldız Tılsımı'],special:'Ejderha Ruhunun Işığı'},
   'Rahip': {role:'İyileştirme / destek',skills:['Işık Şifası','Arınma Dalgası','Kutsal Kalkan'],special:'İlahi Mucize'},
   'Okçu': {role:'Uzak menzil / kritik',skills:['Delici Atış','Çoklu Ok','Kartal Gözü'],special:'Yıldız Yağmuru'},
-  'Suikastçi': {role:'Gizlilik / ani hasar',skills:['Gölge Adımı','Zehirli Bıçak','Sessiz Kesik'],special:'Hiçlikte Kayboluş'},
+  'Suikastçi': {role:'Gölge ve çeviklik',skills:['Gölge Adımı','Zehirli Bıçak','Sessiz Kesik'],special:'Hiçlikte Kayboluş'},
   'Tank': {role:'Savunma / dikkat çekme',skills:['Sarsılmaz Duruş','Kalkan Hücumu','Taunt'],special:'Dağ Gibi Yemin'}
 };
 const starterSkills=['Alev Kıvılcımı','Buz Parçası','Rüzgâr Kesiti','Kıvılcım Zinciri','Küçük İyileştirme'];
@@ -279,7 +425,7 @@ const villages=[
  {name:'Fırtınakale',desc:'Dağ geçidi; savunma ve savaş okulu.',x:-52,z:-42,color:0x8e83c8},
  {name:'Yıldızova',desc:'Büyülü düzlük; akademi ve yıldız gözlemcileri.',x:0,z:-72,color:0xb49bdc}
 ];
-let chosenClass=localStorage.getItem('eterniaClass')||'';
+let chosenClass=localStorage.getItem('eterniaClass')==='Savaşçı'?'Büyücü':(localStorage.getItem('eterniaClass')||'');
 let chosenVillage=localStorage.getItem('eterniaVillage')||'';
 let skills=JSON.parse(localStorage.getItem('eterniaSkills')||'null')||[{name:starterSkills[Math.floor(Math.random()*starterSkills.length)],kind:'Başlangıç',power:18}];
 let inventory=JSON.parse(localStorage.getItem('eterniaInventory')||'null')||[{name:'Yolcu Zırhı',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'},{name:'Eski Bot',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'}];
@@ -323,6 +469,7 @@ function openClassChoice(){
 function chooseClass(name){
  if(chosenClass)return;
  chosenClass=name;
+ restyleAvatar(player,name);
  const special=!!classFirst[name]===false;
  const data=classData[name];const skill=special?data.special:data.skills[Math.floor(Math.random()*data.skills.length)];
  skills.push({name:skill,kind:special?'İlk Seçen Özel':'Sınıf Yeteneği',power:special?55:32});
@@ -475,24 +622,30 @@ function makeEnemy(name,x,z,hp,boss=false,color=0x9d493d,monsterLevel=1,monsterS
  const group=new THREE.Group();const body=new THREE.Mesh(boss?new THREE.DodecahedronGeometry(2.2,1):new THREE.DodecahedronGeometry(.85,0),mat(color,.7));body.position.y=boss?2.2:.9;body.castShadow=true;group.add(body);
  const eyeMat=new THREE.MeshBasicMaterial({color:0xffd8a0});
  for(const side of [-.35,.35]){const eye=new THREE.Mesh(new THREE.SphereGeometry(boss?.13:.07,8,6),eyeMat);eye.position.set(side,boss?2.5:1.1,.65);group.add(eye);}
- group.position.set(x,0,z);group.visible=true;group.traverse(node=>{if(node.isMesh){node.frustumCulled=false;node.castShadow=true;}});scene.add(group);
+ group.position.set(x,heightAt(x,z),z);if(!boss)group.scale.setScalar(.78+monsterLevel*.055);group.visible=true;group.traverse(node=>{if(node.isMesh){node.frustumCulled=false;node.castShadow=true;}});scene.add(group);
  const e={id:`${boss?'boss':'mob'}-${enemies.length}-${name.replace(/[^a-z0-9]/gi,'').toLowerCase()}`,name,x,z,hp,maxHp:hp,boss,level:monsterLevel,speed:monsterSpeed,mesh:group,attack:Math.max(1,Math.round(monsterLevel*2.2)),dead:false};enemies.push(e);return e;
 }
 worldRngState=0xE71E2026; // aynı başlangıç yaratık yerleşimleri
-const stoneBoss=makeEnemy('Taş Muhafız',25,4,1000,true,0x687c8d,8,1.0);
-const mistBoss=makeEnemy('Sis Cadısı',-27,-4,1250,true,0x70559b,9,1.25);
+const stoneBoss=makeEnemy('Taş Muhafız',bossSpawnPositions.warden.x,bossSpawnPositions.warden.z,1000,true,0x687c8d,8,1.0);
+const mistBoss=makeEnemy('Sis Cadısı',bossSpawnPositions.witch.x,bossSpawnPositions.witch.z,1250,true,0x70559b,9,1.25);
 bossMeshes.warden=stoneBoss;bossMeshes.witch=mistBoss;
 const starterMonsters=[
- {name:'Orman Tavşanı',level:1,hp:18,speed:1.8,attack:2,color:0xb5a58c},
- {name:'Yaban Kurdu',level:3,hp:48,speed:2.4,attack:7,color:0x718b62},
- {name:'Dikenli Domuz',level:6,hp:105,speed:1.35,attack:14,color:0x9b6b45},
- {name:'Kül Goblini',level:7,hp:125,speed:1.65,attack:16,color:0x8e7655},
- {name:'Sis Akrebi',level:9,hp:165,speed:1.1,attack:20,color:0x76659b}
+ {name:'Orman Tavşanı',level:1,hp:22,speed:1.8,attack:2,color:0xb5a58c},
+ {name:'Çayır Kaplumbağası',level:2,hp:34,speed:.8,attack:3,color:0x6f9b65},
+ {name:'Yaban Kurdu',level:3,hp:48,speed:2.4,attack:5,color:0x718b62},
+ {name:'Mağara Yarasalı',level:4,hp:62,speed:2.1,attack:7,color:0x6c668c},
+ {name:'Kaya Golemi',level:5,hp:82,speed:.9,attack:9,color:0x77828e},
+ {name:'Dikenli Domuz',level:6,hp:105,speed:1.35,attack:11,color:0x9b6b45},
+ {name:'Kül Goblini',level:7,hp:125,speed:1.65,attack:13,color:0x8e7655},
+ {name:'Orman Hayaleti',level:8,hp:148,speed:1.55,attack:15,color:0x6e9da5},
+ {name:'Sis Akrebi',level:9,hp:175,speed:1.1,attack:18,color:0x76659b},
+ {name:'Kadim Orman Bekçisi',level:10,hp:210,speed:1.25,attack:22,color:0x9a745c}
 ];
-for(let i=0;i<25;i++){
- let a=Math.random()*Math.PI*2,r=17+Math.random()*50;
+for(let i=0;i<50;i++){
+ let a=Math.random()*Math.PI*2,r=12+Math.random()*72;
  const kind=starterMonsters[i%starterMonsters.length];
- makeEnemy(kind.name,Math.cos(a)*r,Math.sin(a)*r,kind.hp,false,kind.color,kind.level,kind.speed);
+ const x=Math.cos(a)*r,z=Math.sin(a)*r;
+ makeEnemy(kind.name,x,z,kind.hp,false,kind.color,kind.level,kind.speed);
 }
 villages.forEach(v=>{
  const marker=new THREE.Mesh(new THREE.CylinderGeometry(4,5,1,8),mat(v.color));marker.position.set(v.x,.25,v.z);scene.add(marker);villageMeshes.push(marker);
@@ -503,6 +656,16 @@ function updateRegion(){
  else currentRegion=chosenVillage;
  $('region').textContent='Bölge: '+currentRegion;
 }
+function respawnBossLocally(key,boss){
+ if(ws&&ws.readyState===1)return;
+ setTimeout(()=>{
+  let x=0,z=0,tries=0,otherKey=key==='warden'?'witch':'warden';
+  do{const a=Math.random()*Math.PI*2,r=48+Math.random()*38;x=Math.cos(a)*r;z=Math.sin(a)*r;tries++;}
+  while(tries<30&&Math.hypot(x-bossSpawnPositions[otherKey].x,z-bossSpawnPositions[otherKey].z)<48);
+  bossSpawnPositions[key]={x,z};boss.x=x;boss.z=z;boss.hp=boss.maxHp;boss.dead=false;boss.mesh.position.set(x,heightAt(x,z),z);boss.mesh.visible=true;
+  feed(`${boss.name} haritanın başka bir noktasında yeniden belirdi!`);
+ },180000);
+}
 function nearestEnemy(maxDist=5){
  let best=null,d=maxDist;
  for(const e of enemies){if(e.dead)continue;const dist=Math.hypot(e.x-player.position.x,e.z-player.position.z);if(dist<d){d=dist;best=e;}}
@@ -512,11 +675,11 @@ function attackTarget(){
  if(!joined||attackCooldown>0)return;
  const e=nearestEnemy(6);if(!e){feed('Saldırmak için bir yaratığa yaklaş.');return;}
  attackCooldown=.55;
- const damage=chosenClass==='Savaşçı'?28:chosenClass==='Suikastçi'?31:chosenClass==='Okçu'?23:chosenClass==='Tank'?17:chosenClass==='Rahip'?15:20;
+ const damage=chosenClass==='Büyücü'?20:chosenClass==='Suikastçi'?31:chosenClass==='Okçu'?23:chosenClass==='Tank'?17:chosenClass==='Rahip'?15:20;
  e.hp-=damage;spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.8,e.z),0xffc06b,1);feed(`${e.name} üzerine ${damage} hasar!`);
  if(e.boss&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));}
  if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);
-  if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));if(bossDown.warden&&bossDown.witch){feed('İki boss da yenildi! Ana köylerin kapısı açıldı.');openVillageChoice();}}
+  if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));else respawnBossLocally(key,e);if(bossDown.warden&&bossDown.witch){feed('İki boss da yenildi! Ana köylerin kapısı açıldı.');openVillageChoice();}}
   
  }
  saveProgress();
@@ -580,7 +743,7 @@ function useSkill(skillIndex=skillSlots[0]){
  const skill=skills[skillIndex];if(!skill)return;
  if(playerMana<20){feed('Bu beceri için yeterli manan yok.');return;}playerMana-=20;updateVitals();
  skillCooldown=5;const e=nearestEnemy(9);
- if(e){const damage=skill.power||25;e.hp-=damage;castSkillEffect(e,0x8b7bff);feed(`${skill.name}: ${damage} hasar!`);if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(bossDown.warden&&bossDown.witch)openVillageChoice();}}}
+ if(e){const damage=skill.power||25;e.hp-=damage;castSkillEffect(e,0x8b7bff);feed(`${skill.name}: ${damage} hasar!`);if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));else respawnBossLocally(key,e);if(bossDown.warden&&bossDown.witch)openVillageChoice();}}}
  else{playerHP=Math.min(maxHP,playerHP+20);feed(`${skill.name}: 20 sağlık yenilendi.`);}
  saveProgress();
 }
@@ -752,13 +915,28 @@ function companionCombat(dt){
 document.addEventListener('keydown',e=>{if(e.code==='KeyM'&&joined)toggleMount();if(e.code==='KeyP'&&joined)commandPetAttack();});
 refreshCompanionUI();
 
+const miniMapCanvas=document.querySelector('#miniMap');
+const miniMapCtx=miniMapCanvas.getContext('2d');
+function drawMiniMap(){
+ const c=miniMapCtx,w=miniMapCanvas.width,h=miniMapCanvas.height,cx=w/2,cy=h/2,R=101,scale=R/120;
+ c.clearRect(0,0,w,h);c.save();c.beginPath();c.arc(cx,cy,R,0,Math.PI*2);c.clip();
+ c.fillStyle='rgba(15,35,48,.94)';c.fillRect(0,0,w,h);
+ c.strokeStyle='rgba(165,210,225,.22)';c.lineWidth=1;
+ for(let r=30;r<=90;r+=30){c.beginPath();c.arc(cx,cy,r*scale,0,Math.PI*2);c.stroke();}
+ c.beginPath();c.moveTo(cx-R,cy);c.lineTo(cx+R,cy);c.moveTo(cx,cy-R);c.lineTo(cx,cy+R);c.stroke();
+ c.strokeStyle='rgba(226,208,164,.8)';c.lineWidth=3;c.beginPath();c.arc(cx,cy,8*scale,0,Math.PI*2);c.stroke();
+ for(const e of enemies){if(e.dead)continue;const px=cx+e.x*scale,py=cy+e.z*scale;c.beginPath();c.fillStyle=e.boss?'#ffb84d':(e.level>=8?'#d58bff':e.level>=5?'#ff9566':'#9be58c');c.arc(px,py,e.boss?5:2.5,0,Math.PI*2);c.fill();}
+ for(const b of Object.values(bossMeshes)){if(!b||b.dead)continue;const px=cx+b.x*scale,py=cy+b.z*scale;c.strokeStyle='#fff0a8';c.lineWidth=2;c.beginPath();c.arc(px,py,7,0,Math.PI*2);c.stroke();}
+ const px=cx+player.position.x*scale,py=cy+player.position.z*scale;c.fillStyle='#65dcff';c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();c.stroke();
+ c.restore();c.strokeStyle='rgba(220,242,255,.9)';c.lineWidth=2;c.beginPath();c.arc(cx,cy,R,0,Math.PI*2);c.stroke();
+}
 function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(clock.getDelta(),.04);
  if(joined)playerMana=Math.min(maxMana,playerMana+dt*1.2);
  for(let i=combatEffects.length-1;i>=0;i--){const fx=combatEffects[i];fx.life-=dt;const t=1-fx.life/fx.max;fx.mesh.scale.setScalar(1+t*2.5);fx.mesh.material.opacity=Math.max(0,1-t);fx.mesh.position.y+=dt*1.2;fx.light.intensity=Math.max(0,2.2*(1-t));if(fx.life<=0){scene.remove(fx.mesh);scene.remove(fx.light);combatEffects.splice(i,1);}}
  for(const c of lootChests){c.mesh.rotation.y=Math.sin(performance.now()*.001+c.x)*.07;c.mesh.position.y=heightAt(c.x,c.z)+.15+Math.sin(performance.now()*.002+c.z)*.08;}
- updateVitals();
+ updateVitals();drawMiniMap();
  for(const c of crystals){if(c.visible){c.rotation.y+=dt*.8;c.position.y=c.userData.baseY+Math.sin(performance.now()*.0015+c.position.x)*.18;}}
  if(joined){
   const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
