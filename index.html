@@ -22,12 +22,13 @@
   input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #54728f;background:#101f32;color:white;font-size:16px;margin:10px 0}
   button{width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(100deg,#42b7dc,#637df2);color:#06111d;font-weight:800;font-size:16px;cursor:pointer}
   #connection{font-size:12px;color:#91a9be;margin-top:12px}
-  @media(max-width:600px){#notice{display:none}#help{font-size:10px;max-width:230px}}
 
   #gamepanel{position:absolute;right:16px;bottom:16px;width:min(330px,42vw);max-height:52vh;overflow:auto;font-size:12px;pointer-events:auto;color:#e5f3ff}
   #gamepanel h3{margin:3px 0 8px;color:#bde7ff;font-size:13px}
   #gamepanel button,.modal button{width:auto;padding:7px 10px;margin:3px 2px;font-size:11px;border-radius:8px}
   #gamepanel .small{color:#9fb8cc;font-size:11px;line-height:1.5}
+  #helpButton{position:absolute;left:16px;top:50%;transform:translateY(-50%);z-index:4;width:auto;padding:12px 16px;border:1px solid #83c9ec;border-radius:11px;background:linear-gradient(145deg,#173b59,#0b1a2d);color:#e8f7ff;font-weight:800;letter-spacing:.08em;box-shadow:0 6px 22px #0008;pointer-events:auto}
+  #helpButton:hover{background:linear-gradient(145deg,#245b80,#142b43)}
   #feed{position:absolute;left:16px;top:110px;width:min(350px,45vw);font-size:12px;line-height:1.5;color:#f5f8ff;text-shadow:0 1px 3px #000}
   .feedline{background:#08111dbb;border-left:3px solid #63c9e8;padding:5px 8px;margin:4px 0;border-radius:4px}
   .modal{position:fixed;inset:0;display:none;place-items:center;background:#030914cc;z-index:8;padding:16px}
@@ -48,6 +49,7 @@
   .skill-slot b{font-size:12px;color:#aee8ff}.skill-slot small{max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #skillbar button{width:auto;padding:8px 9px;font-size:10px;margin:0}
   @media(max-width:760px){#skillbar{gap:3px;max-width:96vw;flex-wrap:wrap;justify-content:center}.skill-slot{width:40px;height:42px}#vitals{bottom:120px}}
+  @media(max-width:760px){#helpButton{left:8px;top:48%;padding:10px 12px;font-size:12px}}
   @media(max-width:600px){#gamepanel{width:46vw;max-height:40vh;right:8px;bottom:8px}#feed{left:8px;top:100px;width:45vw}}
 </style>
 </head>
@@ -60,8 +62,7 @@
       <div id="stats">Seviye 1 · XP 0 · Kristal 0</div>
     </div>
   </div>
-  <div id="notice" class="panel">Diğer oyuncular aynı dünyada görünür. Sunucu bağlantısı durumunu başlangıç ekranında görebilirsin.</div>
-  <div id="help" class="panel">W A S D — Hareket<br>Fare — Kamerayı döndür<br>SPACE — Zıpla<br>E — Kristal topla<br>Sol tık — Saldır · 1 — Yetenek · P — Yoldaşa hedef göster<br>ESC — Fareyi serbest bırak</div>
+  <button id="helpButton" type="button">YARDIM</button>
 
   <div id="vitals" class="panel">
     <div class="vital-label">CAN <span id="hpText">100 / 100</span></div><div class="vital-track"><span id="hpFill"></span></div>
@@ -98,16 +99,6 @@
       <button id="bestiaryOpen" type="button">Yaratık rehberi</button>
     </div>
     <div id="mountline" class="small">Binek: Gezgin Atı</div>
-    <div class="panel" style="margin-top:8px;padding:8px">
-      <b>Parti</b>
-      <div id="partyStatus" class="small">Partide değilsin.</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
-        <button id="partyCreate" type="button">Parti kur</button>
-        <input id="partyInviteName" placeholder="Oyuncu adı" maxlength="18" style="width:110px">
-        <button id="partyInvite" type="button">Davet et</button>
-        <button id="partyLeave" type="button">Partiden ayrıl</button>
-      </div>
-    </div>
     <div class="small" style="margin-top:7px">Sol tık: saldır · 1: yetenek · E: kristal/ganimet · WASD: hareket</div>
   </div>
 </div>
@@ -125,33 +116,8 @@
 <div id="eventModal" class="modal"><div class="card"><h2 id="eventTitle">Yeni meydan okuma açıldı!</h2><p id="eventDesc"></p><button id="eventClose">Dünyaya dön</button></div></div>
 <div id="bestiaryModal" class="modal"><div class="card"><h2>Yaratık Rehberi</h2><p>Yalnızca 1–10. seviye yaratıkların bilgileri gösterilir. 11. seviye ve üzerindeki yaratıkların bilgileri gizlidir.</p><div id="bestiaryContent"></div><button id="bestiaryClose">Kapat</button></div></div>
 <div id="skillModal" class="modal"><div class="card"><h2>Beceri Kitabı</h2><p>Öğrendiğin beceriler. Bir beceriye tıklayarak etkin çubuğa yerleştirebilirsin.</p><div id="skillList" class="choicegrid"></div><button id="skillClose">Kapat</button></div></div>
-<div id="lootModal" class="modal"><div class="card"><h2>Ganimet Sandığı</h2><p>Canavardan düşen ganimetleri topladın.</p><div id="lootContents"></div><button id="lootClose">Ganimetleri topla</button></div></div>
- <div id="inventoryModal" class="modal">
-  <div class="card">
-    <h2>Karakter Çantası</h2>
-    <div id="inventoryContents">Çanta yükleniyor...</div>
-    <button id="closeInventory" type="button">Kapat</button>
-  </div>
-</div>
-
-<div id="statsModal" class="modal">
-  <div class="card">
-    <h2>Karakter Statüleri</h2>
-    <p>Kullanılabilir puan: <span id="statPoints">0</span></p>
-    <div id="statContents"></div>
-    <button id="closeStats" type="button">Kapat</button>
-  </div>
-</div>
-<div id="helpModal" class="modal">
-  <div class="card">
-    <h2>Yardımcı Rehber</h2>
-    <p>I: Çanta</p>
-    <p>U: Statü ekranı</p>
-    <p>F1: Yardımcı rehber</p>
-    <p>Seviye atladığında 5 statü puanı kazanırsın.</p>
-    <button id="closeHelp" type="button">Kapat</button>
-  </div>
-</div>
+<div id="lootModal" class="modal"><div class="card"><h2>Ganimet Sandığı</h2><p>Sandıktaki eşyalar ve para çantana otomatik eklendi.</p><div id="lootContents"></div><button id="lootClose">Kapat</button></div></div>
+<div id="helpModal" class="modal"><div class="card"><h2>Yardım · Kontroller</h2><p><b>W A S D:</b> Hareket et<br><b>Fare:</b> Kamerayı döndür<br><b>SPACE:</b> Zıpla<br><b>E:</b> Yakındaki kristali topla<br><b>Sol tık:</b> Saldır veya ganimet sandığını aç<br><b>1:</b> Etkin beceriyi kullan<br><b>K:</b> Beceri kitabını aç<br><b>H:</b> Can iksiri kullan<br><b>J:</b> Mana iksiri kullan<br><b>P:</b> Yoldaşa hedef göster<br><b>M:</b> Bineğe bin / in<br><b>ESC:</b> Fareyi serbest bırak</p><p>Canavarları yenerek XP ve ganimet kazan. Sandığı açtığında çıkan ekipmanlar otomatik olarak çantana eklenir. Çantandaki eşyaları Maceracı Defteri bölümünden kuşanabilirsin.</p><button id="helpClose">Kapat</button></div></div>
 <script src="./config.js"></script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -162,6 +128,7 @@ Math.random = () => {
  worldRngState = (worldRngState * 1664525 + 1013904223) >>> 0;
  return worldRngState / 4294967296;
 };
+
 const canvas = document.querySelector('#game');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -245,7 +212,7 @@ function connect(){
    if(msg.type==='welcome'){
     myId=msg.id;
     if(msg.bosses){bosses=msg.bosses;bossDown={warden:bosses.warden<=0,witch:bosses.witch<=0};for(const [key,boss] of Object.entries(bossMeshes)){if(boss){boss.hp=bosses[key];if(boss.hp<=0){boss.dead=true;boss.mesh.visible=false;}}}}
-    if(msg.classFirst)classFirst=msg.classFirst;if(msg.party)handlePartyUpdate(msg.party);
+    if(msg.classFirst)classFirst=msg.classFirst;
     (msg.deadEnemies||[]).forEach(id=>{const e=enemies.find(x=>x.id===id);if(e){e.dead=true;e.mesh.visible=false;}});
     (msg.chests||[]).forEach(ch=>createLootChest(ch,false));
     return;
@@ -253,19 +220,11 @@ function connect(){
    if(msg.type==='enemyKilled'){const e=enemies.find(x=>x.id===msg.enemyId);if(e){e.dead=true;e.mesh.visible=false;}}
    if(msg.type==='enemyRespawn'){const e=enemies.find(x=>x.id===msg.enemyId);if(e){e.hp=e.maxHp;e.dead=false;e.mesh.visible=true;}}
    if(msg.type==='lootSpawn'){createLootChest(msg.chest,false);}
-   if(msg.type==='lootExpired'){const expired=lootChests.find(c=>c.id===msg.chestId);if(expired){scene.remove(expired.mesh);lootChests=lootChests.filter(c=>c!==expired);}}
    if(msg.type==='lootClaimed'){
     const chest=lootChests.find(c=>c.id===msg.chestId);
     if(chest){chest.claimed=true;scene.remove(chest.mesh);lootChests=lootChests.filter(c=>c!==chest);}
+    if(msg.playerId===myId&&msg.contents){showLootContents(msg.contents);}
    }
-   if(msg.type==='lootReward'){showLootContents(msg.contents);}
-   if(msg.type==='lootDenied'){feed(msg.message||'Bu sandığı alamazsın.');}
-   if(msg.type==='partyUpdate'){handlePartyUpdate(msg.party);}
-   if(msg.type==='partyInviteReceived'){
-    const accept=window.confirm(`${msg.fromName} seni partisine davet etti. Katılmak istiyor musun?`);
-    if(accept)sendPartyAction('partyAccept');
-   }
-   if(msg.type==='partyError'||msg.type==='partyNotice'){feed(msg.message||'Parti bildirimi.');}
    if(msg.type==='state'){
     for(const p of msg.players){if(p.id===myId)continue;let o=others.get(p.id);if(!o){o=createAvatar(p.color);scene.add(o);others.set(p.id,o);}o.position.set(p.x,p.y,p.z);o.rotation.y=p.rotation||0;}
     for(const [id,o] of others){if(!msg.players.some(p=>p.id===id)){scene.remove(o);others.delete(id);}}
@@ -286,47 +245,6 @@ document.addEventListener('pointerlockchange',()=>mouseLocked=document.pointerLo
 document.addEventListener('mousemove',e=>{if(mouseLocked){yaw-=e.movementX*.0025;pitch=Math.max(-.15,Math.min(.75,pitch+e.movementY*.0018));}});
 document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(e.code==='KeyE')collectNearby();});
 document.addEventListener('keyup',e=>keys[e.code]=false);
- function toggleGameModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal) return;
-
-  const isOpen = modal.style.display === 'flex';
-
-  document.querySelectorAll(
-    '#inventoryModal, #statsModal, #helpModal'
-  ).forEach(m => m.style.display = 'none');
-
-  if (!isOpen) modal.style.display = 'flex';
-}
-
-document.addEventListener('keydown', e => {
-  if (e.repeat) return;
-  if (e.target.closest('input, textarea, select')) return;
-
-  if (e.code === 'KeyI') {
-    e.preventDefault();
-    toggleGameModal('inventoryModal');
-  }
-
-  if (e.code === 'KeyU') {
-    e.preventDefault();
-    toggleGameModal('statsModal');
-  }
-
-  if (e.code === 'F1') {
-    e.preventDefault();
-    toggleGameModal('helpModal');
-  }
-});
-
-document.getElementById('closeInventory').onclick = () =>
-  document.getElementById('inventoryModal').style.display = 'none';
-
-document.getElementById('closeStats').onclick = () =>
-  document.getElementById('statsModal').style.display = 'none';
-
-document.getElementById('closeHelp').onclick = () =>
-  document.getElementById('helpModal').style.display = 'none';
 canvas.addEventListener('click',()=>{if(joined&&!mouseLocked)canvas.requestPointerLock?.();});
 function collectNearby(){
  let nearest=null,d=3.2;
@@ -359,9 +277,9 @@ let chosenVillage=localStorage.getItem('eterniaVillage')||'';
 let skills=JSON.parse(localStorage.getItem('eterniaSkills')||'null')||[{name:starterSkills[Math.floor(Math.random()*starterSkills.length)],kind:'Başlangıç',power:18}];
 let inventory=JSON.parse(localStorage.getItem('eterniaInventory')||'null')||[{name:'Yolcu Zırhı',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'},{name:'Eski Bot',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'}];
 let equippedItemIndex=Math.max(0,Number(localStorage.getItem('eterniaEquippedItemIndex')||0));
+if(inventory[equippedItemIndex]){maxHP=100+(inventory[equippedItemIndex].health||0);playerHP=maxHP;}
 let currentRegion='Başlangıç Köyü', bosses={warden:1000,witch:1250}, bossDown={warden:false,witch:false};
 let classFirst={}; let lastMilestone=0; let playerHP=100, maxHP=100, attackCooldown=0, skillCooldown=0, deathCooldown=0;
- if(inventory[equippedItemIndex]){maxHP=100+(inventory[equippedItemIndex].health||0);playerHP=maxHP;}
 let enemies=[], bossMeshes={}, villageMeshes=[];
 const regionName=()=>chosenVillage||'Başlangıç Köyü';
 function persist(){localStorage.setItem('eterniaClass',chosenClass);localStorage.setItem('eterniaVillage',chosenVillage);localStorage.setItem('eterniaSkills',JSON.stringify(skills));localStorage.setItem('eterniaInventory',JSON.stringify(inventory));localStorage.setItem('eterniaXP',String(xp));localStorage.setItem('eterniaCrystals',String(crystalCount));localStorage.setItem('eterniaCopperCoins',String(copperCoins));}
@@ -422,8 +340,6 @@ function openMilestone(n){
  $('eventModal').style.display='grid';document.exitPointerLock?.();lastMilestone=n;
 }
 $('eventClose').onclick=()=>$('eventModal').style.display='none';
- const combatEffects = [] ;
- const lootChests = [] ;
 function spawnCombatEffect(position,color=0x70dfff,scale=1){
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.7*scale,.06*scale,8,32),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95}));
  ring.position.copy(position);ring.position.y+=.5;ring.rotation.x=Math.PI/2;scene.add(ring);
@@ -442,7 +358,7 @@ function makeChestMesh(){
 }
 function createLootChest(chest,broadcast=true){
  if(!chest||lootChests.some(c=>c.id===chest.id))return;
- const mesh=makeChestMesh();mesh.position.set(chest.x,heightAt(chest.x,chest.z),chest.z);scene.add(mesh);
+ const mesh=makeChestMesh();mesh.position.set(chest.x,0,chest.z);mesh.visible=true;mesh.traverse(node=>{if(node.isMesh)node.frustumCulled=false;});scene.add(mesh);
  const obj={...chest,mesh};lootChests.push(obj);
  if(broadcast&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'lootSpawn',chest:{id:obj.id,x:obj.x,z:obj.z,contents:obj.contents}}));
 }
@@ -463,7 +379,8 @@ function applyLootContents(contents){
  saveProgress();
 }
 function showLootContents(contents){
- pendingLoot=contents;
+ pendingLoot=null;
+ applyLootContents(contents);
  const box=$('lootContents');
  const item=contents.item;
  box.innerHTML=`<div class="panel"><b>Para:</b> ${contents.coins||0} bakır değerinde<br><b>Eşya:</b> ${item?`${item.name} · ${item.tier||'Beyaz'} · ${item.defense||0} savunma · ${item.health||0} can`:'Bu sandıkta ekipman yok'}</div>`;
@@ -477,7 +394,7 @@ function openLootChest(chest){
  }
 }
 function collectPendingLoot(){
- if(pendingLoot){applyLootContents(pendingLoot);pendingLoot=null;}
+ pendingLoot=null;
  $('lootModal').style.display='none';
 }
 function tryOpenChest(ev){
@@ -553,7 +470,7 @@ function makeEnemy(name,x,z,hp,boss=false,color=0x9d493d,monsterLevel=1,monsterS
  const group=new THREE.Group();const body=new THREE.Mesh(boss?new THREE.DodecahedronGeometry(2.2,1):new THREE.DodecahedronGeometry(.85,0),mat(color,.7));body.position.y=boss?2.2:.9;body.castShadow=true;group.add(body);
  const eyeMat=new THREE.MeshBasicMaterial({color:0xffd8a0});
  for(const side of [-.35,.35]){const eye=new THREE.Mesh(new THREE.SphereGeometry(boss?.13:.07,8,6),eyeMat);eye.position.set(side,boss?2.5:1.1,.65);group.add(eye);}
- group.position.set(x,heightAt(x,z),z);scene.add(group);
+ group.position.set(x,0,z);group.visible=true;group.traverse(node=>{if(node.isMesh){node.frustumCulled=false;node.castShadow=true;}});scene.add(group);
  const e={id:`${boss?'boss':'mob'}-${enemies.length}-${name.replace(/[^a-z0-9]/gi,'').toLowerCase()}`,name,x,z,hp,maxHp:hp,boss,level:monsterLevel,speed:monsterSpeed,mesh:group,attack:Math.max(1,Math.round(monsterLevel*2.2)),dead:false};enemies.push(e);return e;
 }
 worldRngState=0xE71E2026; // aynı başlangıç yaratık yerleşimleri
@@ -586,37 +503,12 @@ function nearestEnemy(maxDist=5){
  for(const e of enemies){if(e.dead)continue;const dist=Math.hypot(e.x-player.position.x,e.z-player.position.z);if(dist<d){d=dist;best=e;}}
  return best;
 }
-function reportEnemyDamage(enemy,damage){
- if(ws&&ws.readyState===1&&enemy&&Number.isFinite(damage)){
-  ws.send(JSON.stringify({type:'enemyDamage',enemyId:enemy.id,damage}));
- }
-}
-function handlePartyUpdate(party){
- currentParty=party||null;
- const status=$('partyStatus');
- if(!status)return;
- if(!currentParty){status.textContent='Partide değilsin.';return;}
- const names=currentParty.members.map(m=>m.name+(m.id===currentParty.leaderId?' ★':''));
- status.textContent=`${names.length}/5 · ${names.join(', ')}`;
-}
-let currentParty=null;
-function sendPartyAction(type,extra={}){
- if(!ws||ws.readyState!==1){feed('Parti sistemi için çevrim içi sunucuya bağlanmalısın.');return;}
- ws.send(JSON.stringify({type,...extra}));
-}
-$('partyCreate').addEventListener('click',()=>sendPartyAction('partyCreate'));
-$('partyInvite').addEventListener('click',()=>{
- const name=$('partyInviteName').value.trim();
- if(!name){feed('Davet etmek için oyuncu adını yaz.');return;}
- sendPartyAction('partyInvite',{name});
-});
-$('partyLeave').addEventListener('click',()=>sendPartyAction('partyLeave'));
 function attackTarget(){
  if(!joined||attackCooldown>0)return;
  const e=nearestEnemy(6);if(!e){feed('Saldırmak için bir yaratığa yaklaş.');return;}
  attackCooldown=.55;
  const damage=chosenClass==='Savaşçı'?28:chosenClass==='Suikastçi'?31:chosenClass==='Okçu'?23:chosenClass==='Tank'?17:chosenClass==='Rahip'?15:20;
- e.hp-=damage;reportEnemyDamage(e,damage);spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.8,e.z),0xffc06b,1);feed(`${e.name} üzerine ${damage} hasar!`);
+ e.hp-=damage;spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.8,e.z),0xffc06b,1);feed(`${e.name} üzerine ${damage} hasar!`);
  if(e.boss&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));}
  if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);
   if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));if(bossDown.warden&&bossDown.witch){feed('İki boss da yenildi! Ana köylerin kapısı açıldı.');openVillageChoice();}}
@@ -673,7 +565,7 @@ function drinkPotion(kind){
 }
 $('openSkillBook').addEventListener('click',openSkillBook);
 $('skillClose').addEventListener('click',()=>$('skillModal').style.display='none');
-$('lootClose').addEventListener('click',collectPendingLoot);
+$('lootClose').addEventListener('click',collectPendingLoot); $('helpButton').addEventListener('mousedown',e=>e.stopPropagation()); $('helpButton').addEventListener('click',()=>{$('helpModal').style.display='grid';document.exitPointerLock?.();}); $('helpClose').addEventListener('click',()=>$('helpModal').style.display='none');
 $('healthPotion').addEventListener('click',()=>drinkPotion('health'));
 $('manaPotion').addEventListener('click',()=>drinkPotion('mana'));
 renderSkillBar();updateVitals();
@@ -683,7 +575,7 @@ function useSkill(skillIndex=skillSlots[0]){
  const skill=skills[skillIndex];if(!skill)return;
  if(playerMana<20){feed('Bu beceri için yeterli manan yok.');return;}playerMana-=20;updateVitals();
  skillCooldown=5;const e=nearestEnemy(9);
- if(e){const damage=skill.power||25;e.hp-=damage;reportEnemyDamage(e,damage);castSkillEffect(e,0x8b7bff);feed(`${skill.name}: ${damage} hasar!`);if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(bossDown.warden&&bossDown.witch)openVillageChoice();}}}
+ if(e){const damage=skill.power||25;e.hp-=damage;castSkillEffect(e,0x8b7bff);feed(`${skill.name}: ${damage} hasar!`);if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yenildi!`);if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(bossDown.warden&&bossDown.witch)openVillageChoice();}}}
  else{playerHP=Math.min(maxHP,playerHP+20);feed(`${skill.name}: 20 sağlık yenilendi.`);}
  saveProgress();
 }
@@ -844,7 +736,7 @@ function companionCombat(dt){
  petAttackTimer=Math.max(0,petAttackTimer-dt);
  if(petAttackTimer<=0){
   const e=(petCommandTarget&&!petCommandTarget.dead)?petCommandTarget:nearestEnemy(8);
-  if(e){petAttackTimer=3.2;spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.5,e.z),0x75dfff,.7);const damage=Math.round((petCatalog[petIndex].damage+petLevel*2)*petRarityBonus[petRarity]*(petMutation>=0?petMutations[petMutation].bonus:1));e.hp-=damage;reportEnemyDamage(e,damage);if(e.boss&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));feed(`${petCatalog[petIndex].name} saldırdı: ${damage} hasar!`);
+  if(e){petAttackTimer=3.2;spawnCombatEffect(new THREE.Vector3(e.x,heightAt(e.x,e.z)+.5,e.z),0x75dfff,.7);const damage=Math.round((petCatalog[petIndex].damage+petLevel*2)*petRarityBonus[petRarity]*(petMutation>=0?petMutations[petMutation].bonus:1));e.hp-=damage;if(e.boss&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossAttack',boss:e===stoneBoss?'warden':'witch',damage}));feed(`${petCatalog[petIndex].name} saldırdı: ${damage} hasar!`);
    if(e.hp<=0){e.hp=0;e.dead=true;e.mesh.visible=false;if(petCommandTarget===e)petCommandTarget=null;gainXP(e.boss?220:35);petGainXP(e.boss?70:22);spawnLootChest(e);feed(`${e.name} yoldaşınla birlikte yenildi!`);
     if(e.boss){const key=e===stoneBoss?'warden':'witch';bossDown[key]=true;dropSkill('Boss');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'bossDefeated',boss:key}));if(bossDown.warden&&bossDown.witch)openVillageChoice();}
     

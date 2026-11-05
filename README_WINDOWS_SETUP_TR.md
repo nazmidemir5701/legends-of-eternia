@@ -26,7 +26,3 @@ Bu bir test sürümüdür; ticari dağıtıma hazır, imzalı bir oyun kurulumu 
 5. Herkes kurulumdan sonra aynı merkezi sunucuya bağlanır.
 
 Sunucu adresi henüz girilmediyse masaüstü uygulaması kendi bilgisayarında yerel test sunucusunu açar; ortak dünya bağlantısı kurulmaz.
-
-
-## v0.6.1 ganimet paylaşımı
-Parti kurup çevrim içi oyuncu adına davet gönderebilirsin. Aynı canavara verilen hasar sunucuda toplanır. En yüksek toplam hasara sahip parti ekipman hakkını alır; ekipmanlar üyeler arasında sırayla dağıtılır, para eşit bölünür. Parti dışındaki oyuncular arasında en yüksek hasarı veren kişi sandığı alır.

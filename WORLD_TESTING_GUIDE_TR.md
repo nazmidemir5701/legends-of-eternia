@@ -23,12 +23,3 @@ H can iksiriyle 55 can, J mana iksiriyle 55 mana yeniler. Başlangıçta her iks
 
 ## Çok oyunculu test
 Herkes aynı `wss://` sunucu adresine bağlanmalıdır. Oyuncular, boss canı, normal yaratıkların ölümü/yeniden doğması ve sandıkların alınması sunucu üzerinden eşzamanlanır.
-
-
-## Parti ve ganimet paylaşımı
-1. Oyunculardan biri `Parti kur` düğmesine basar.
-2. Parti lideri, yanındaki oyuncu adı alanına çevrim içi arkadaşının karakter adını yazar ve `Davet et` düğmesine basar.
-3. Arkadaşı daveti kabul edince partiye katılır. Parti en fazla 5 kişidir.
-4. Parti üyeleri bir canavara birlikte hasar verirse katkıları birleştirilir. En yüksek toplam katkıya sahip taraf ganimet hakkını kazanır.
-5. Parti sandığındaki ekipmanlar üyelerin partiye katılma sırasına göre dönüşümlü dağıtılır. Para çevrim içi üyeler arasında eşit paylaşılır.
-6. Aynı canavara parti dışında vuran oyuncular arasında en yüksek hasarı veren kişi sandığı alır.

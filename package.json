@@ -1,8 +1,8 @@
 {
   "name": "legends-of-eternia",
-  "version": "0.6.1",
+  "version": "0.6.0",
   "private": true,
-  "description": "LEGENDS OF ETERNIA shared-world playtest with contribution-based loot and party distribution",
+  "description": "LEGENDS OF ETERNIA shared-world 3D RPG playtest build",
   "main": "electron-main.js",
   "scripts": {
     "start": "node server.js",
