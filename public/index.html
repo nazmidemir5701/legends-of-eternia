@@ -191,6 +191,13 @@ const keys={};
 let yaw=0,pitch=.22,mouseLocked=false,velocityY=0,onGround=true;
 const clock=new THREE.Clock();
 
+// Shared game state must exist before WebSocket callbacks and UI handlers can access it.
+let currentRegion='Başlangıç Köyü';
+let bosses={warden:1000,witch:1250}, bossDown={warden:false,witch:false};
+let classFirst={}, lastMilestone=0;
+let playerHP=100, maxHP=100, attackCooldown=0, skillCooldown=0, deathCooldown=0;
+let lootChests=[], combatEffects=[], pendingLoot=null;
+
 function updateStats(){
  level=1+Math.floor(xp/100);
  stats.textContent=`Seviye ${level} · XP ${xp} · Kristal ${crystalCount}`;
@@ -278,8 +285,6 @@ let skills=JSON.parse(localStorage.getItem('eterniaSkills')||'null')||[{name:sta
 let inventory=JSON.parse(localStorage.getItem('eterniaInventory')||'null')||[{name:'Yolcu Zırhı',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'},{name:'Eski Bot',rarity:-1,tier:'Beyaz',defense:1,health:10,description:'Başlangıç ekipmanı.'}];
 let equippedItemIndex=Math.max(0,Number(localStorage.getItem('eterniaEquippedItemIndex')||0));
 if(inventory[equippedItemIndex]){maxHP=100+(inventory[equippedItemIndex].health||0);playerHP=maxHP;}
-let currentRegion='Başlangıç Köyü', bosses={warden:1000,witch:1250}, bossDown={warden:false,witch:false};
-let classFirst={}; let lastMilestone=0; let playerHP=100, maxHP=100, attackCooldown=0, skillCooldown=0, deathCooldown=0;
 let enemies=[], bossMeshes={}, villageMeshes=[];
 const regionName=()=>chosenVillage||'Başlangıç Köyü';
 function persist(){localStorage.setItem('eterniaClass',chosenClass);localStorage.setItem('eterniaVillage',chosenVillage);localStorage.setItem('eterniaSkills',JSON.stringify(skills));localStorage.setItem('eterniaInventory',JSON.stringify(inventory));localStorage.setItem('eterniaXP',String(xp));localStorage.setItem('eterniaCrystals',String(crystalCount));localStorage.setItem('eterniaCopperCoins',String(copperCoins));}
